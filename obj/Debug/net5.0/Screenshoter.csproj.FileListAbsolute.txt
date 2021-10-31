@@ -1,0 +1,16 @@
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.exe
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.deps.json
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.runtimeconfig.json
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.runtimeconfig.dev.json
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\ref\Screenshoter.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Screenshoter.pdb
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.csproj.AssemblyReference.cache
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.GeneratedMSBuildEditorConfig.editorconfig
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.AssemblyInfoInputs.cache
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.AssemblyInfo.cs
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.csproj.CoreCompileInputs.cache
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.dll
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\ref\Screenshoter.dll
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.pdb
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.genruntimeconfig.cache

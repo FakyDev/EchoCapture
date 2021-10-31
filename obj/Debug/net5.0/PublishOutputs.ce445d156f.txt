@@ -1,0 +1,5 @@
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\publish\Screenshoter.exe
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\publish\Screenshoter.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\publish\Screenshoter.deps.json
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\publish\Screenshoter.runtimeconfig.json
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\publish\Screenshoter.pdb
