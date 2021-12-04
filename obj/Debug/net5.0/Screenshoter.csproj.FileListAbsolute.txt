@@ -14,3 +14,9 @@ C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.dll
 C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\ref\Screenshoter.dll
 C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.pdb
 C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.genruntimeconfig.cache
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\Microsoft.Win32.SystemEvents.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\System.Drawing.Common.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\runtimes\win\lib\netcoreapp3.1\Microsoft.Win32.SystemEvents.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\runtimes\unix\lib\netcoreapp3.1\System.Drawing.Common.dll
+C:\Media\App_Development\Screenshoter\bin\Debug\net5.0\runtimes\win\lib\netcoreapp3.1\System.Drawing.Common.dll
+C:\Media\App_Development\Screenshoter\obj\Debug\net5.0\Screenshoter.csproj.CopyComplete
