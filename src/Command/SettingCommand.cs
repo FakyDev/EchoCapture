@@ -76,6 +76,7 @@ namespace Screenshoter.Command{
             //for displaying data
             if(action == SettingCommand.DISPLAY){
                 this.DisplayData();
+                return;
             }
 
             //for updating folder
@@ -93,7 +94,6 @@ namespace Screenshoter.Command{
 
                 //inform user
                 Debug.Success("Folder path has been updated.");
-
                 return;
             } 
             
@@ -115,9 +115,13 @@ namespace Screenshoter.Command{
 
                 //inform user
                 Debug.Success($"Time interval has been set to {parsedValue}ms.");
-
                 return;
             }
+
+            //get reference
+            CommandArg commandArg = this.ArgsList[0];
+            //throw exception
+            throw new InvalidLineArgumentException(commandArg.ArgNumber, commandArg.ArgName, commandArg.ArgType[0]);
         }
 
         /// <summary> Get the application settings, and output to user.</summary>

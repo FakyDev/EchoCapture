@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 using Screenshoter.Data;
 using Screenshoter.Data.File;
-//using Screenshoter.Exceptions;
+using Screenshoter.Exceptions;
 using Screenshoter.Exceptions.Data;
 
 namespace Screenshoter.Command{
@@ -63,6 +63,7 @@ namespace Screenshoter.Command{
             //get param 1
             string state = args[0];
 
+            //for starting
             if(state == TaskCommand.START){
                 //will hold the delay value
                 int? delay = null;
@@ -85,6 +86,7 @@ namespace Screenshoter.Command{
                 return;
             }
 
+            //for ending
             if(state == TaskCommand.STOP){
                 try{
                     this.StopWork();
@@ -96,7 +98,13 @@ namespace Screenshoter.Command{
 
                 //notice user
                 Debug.Success("Operation was successfully ended.");
+                return;
             }
+
+            //get reference
+            CommandArg commandArg = this.ArgsList[0];
+            //throw exception
+            throw new InvalidLineArgumentException(commandArg.ArgNumber, commandArg.ArgName, commandArg.ArgType[0]);
         }
 
         /// <summary> Starts the operation of capturing screen.</summary>
