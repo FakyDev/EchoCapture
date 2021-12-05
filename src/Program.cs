@@ -85,8 +85,8 @@ namespace Screenshoter{
 
             "You should have received a copy of the GNU Affero General Public License\n" +
             "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\n" +
-
-            "Contact email: todoemail@gmail.com";
+            
+            "Github: https://github.com/FakyDev/Screenshoter";
 
             //message
             Debug.Message(msg);
