@@ -243,3 +243,5 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+obj/Debug/net5.0-windows/Screenshoter.GeneratedMSBuildEditorConfig.editorconfig
+obj/Debug/net5.0-windows/Screenshoter.assets.cache
