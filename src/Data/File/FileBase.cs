@@ -152,7 +152,7 @@ namespace Screenshoter.Data.File{
             }
 
             try{
-                //create file
+                //delete file
                 System.IO.File.Delete(this.FullPath);
             } catch (Exception){
                 return false;
