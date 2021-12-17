@@ -191,12 +191,12 @@ namespace Screenshoter.Command{
                 }
 
                 //screenshot and save
-                TaskCommand.ScreenshotAndSave();
+                await TaskCommand.ScreenshotAndSave();
             }
         }
 
-        /// <summary> Screenshot the display, and save it with the name of the current time.</summary>
-        private static void ScreenshotAndSave(){
+        /// <summary> Screenshot the display and save it, asynchronously.</summary>
+        private async static Task ScreenshotAndSave(){
             //parse format to current time
             string date = DateTime.Now.ToString(TaskCommand.FILENAME_FORMAT);
 
@@ -211,48 +211,57 @@ namespace Screenshoter.Command{
                 //screenshot
                 using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
                     //create file
-                    if(file.CreateFile(out fs)){
+                    if(file.CreateFileAsync(out fs)){
                         //save screenshot
-                        file.OverwriteFile(fs, bmp);
+                        await file.OverwriteFileAsync(fs, bmp);
                         //free resource
                         fs.Dispose();
 
-                        //for debug
-                        if(Debug.IsDebug){
-                            //create file name
-                            string fileName = $"{date}.{file.Extension}";
-                            //convert to debug string
-                            Debug.Dump(fileName, out fileName);
+                        //async debug
+                        Task debugOperation = Task.Run(() => {
+                            if(Debug.IsDebug){
+                                //create file name
+                                string fileName = $"{date}.{file.Extension}";
+                                //convert to debug string
+                                Debug.Dump(fileName, out fileName);
 
-                            //send to console
-                            Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
-                        }
+                                //send to console
+                                Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
+                            }
+                        });
                     } else {
-                        //for debug
-                        if(Debug.IsDebug){
-                            //create file name
-                            string fileName = $"{date}.{file.Extension}";
-                            //convert to debug string
-                            Debug.Dump(fileName, out fileName);
+                        //async debug
+                        Task debugOperation = Task.Run(() => {
+                            if(Debug.IsDebug){
+                                //create file name
+                                string fileName = $"{date}.{file.Extension}";
+                                //convert to debug string
+                                Debug.Dump(fileName, out fileName);
 
-                            //send to console
-                            Debug.Error($"Failed to create file.\n\t{fileName}");
-                        }
+                                //send to console
+                                Debug.Error($"Failed to create file.\n\t{fileName}");
+                            }
+                        });
                     }
                 }
             } else {
                 //screenshot
-                PngFile.Screenshot(file);
+                using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
+                    //save screenshot
+                    await file.OverwriteFileAsync(bmp);
 
-                //for debug
-                if(Debug.IsDebug){
-                    //create file name
-                    string fileName = $"{date}.{file.Extension}";
-                    //convert to debug string
-                    Debug.Dump(fileName, out fileName);
+                    //async debug
+                    Task debugOperation = Task.Run(() => {
+                        if(Debug.IsDebug){
+                            //create file name
+                            string fileName = $"{date}.{file.Extension}";
+                            //convert to debug string
+                            Debug.Dump(fileName, out fileName);
 
-                    //send to console
-                    Debug.Success($"Saved the capture screen.\n\t{fileName}");
+                            //send to console
+                            Debug.Success($"Saved the capture screen.\n\t{fileName}");
+                        }
+                    });
                 }
             }
         }
@@ -270,3 +279,58 @@ namespace Screenshoter.Command{
         }
     }
 }
+
+/*
+//will hold the stream
+if(!file.FileExists){
+    //will hold the file stream
+    System.IO.FileStream fs;
+
+    //screenshot
+    using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
+        //create file
+        if(file.CreateFile(out fs)){
+            //save screenshot
+            file.OverwriteFile(fs, bmp);
+            //free resource
+            fs.Dispose();
+
+            //for debug
+            if(Debug.IsDebug){
+                //create file name
+                string fileName = $"{date}.{file.Extension}";
+                //convert to debug string
+                Debug.Dump(fileName, out fileName);
+
+                //send to console
+                Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
+            }
+        } else {
+            //for debug
+            if(Debug.IsDebug){
+                //create file name
+                string fileName = $"{date}.{file.Extension}";
+                //convert to debug string
+                Debug.Dump(fileName, out fileName);
+
+                //send to console
+                Debug.Error($"Failed to create file.\n\t{fileName}");
+            }
+        }
+    }
+} else {
+    //screenshot
+    PngFile.Screenshot(file);
+
+    //for debug
+    if(Debug.IsDebug){
+        //create file name
+        string fileName = $"{date}.{file.Extension}";
+        //convert to debug string
+        Debug.Dump(fileName, out fileName);
+
+        //send to console
+        Debug.Success($"Saved the capture screen.\n\t{fileName}");
+    }
+}
+*/
