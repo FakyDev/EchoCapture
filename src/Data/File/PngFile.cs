@@ -1,12 +1,16 @@
 using System;
+using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
 
+using Screenshoter.Data.File.Async;
+
 namespace Screenshoter.Data.File{
 
-    /// <summary> Allows you to read, parse and overwrite png image files. Also contains functionality to get screenshot.</summary>
-    public class PngFile : FileBase<Bitmap>{
+    /// <summary> It allows you to perform asynchronous and synchronous file-related operation to PNG image file. Those operation
+    /// includes creating, deleting, reading and overwriting</summary>
+    public partial class PngFile : FileBase<Bitmap>{
         
         /// <param name="name"> The file name.</param>
         /// <param name="path"> The file path.</param>
@@ -64,10 +68,10 @@ namespace Screenshoter.Data.File{
         /// <param name="fs"> The file stream to use.</param>
         /// <param name="value"> The new bitmap to overwrite with.</param>
         /// <returns> Return true, if file is overwritten else file does not exist,
-        /// failed to overwrite or filestream is not for the same file.</returns>
+        /// failed to overwrite or filestream is invalid.</returns>
         public override bool OverwriteFile(FileStream fs, Bitmap value){
-            //not same file
-            if(fs.Name != this.FullPath){
+            //not same file or cannot write
+            if(fs.Name != this.FullPath || !fs.CanWrite){
                 return false;
             }
 
@@ -82,7 +86,7 @@ namespace Screenshoter.Data.File{
             //success
             return true;
         }
-    
+
         /// <summary> Screenshot the screen and saved it in the existing file.</summary>
         /// <param name="file"> The file to saved to.</param>
         public static bool Screenshot(PngFile file){
@@ -127,6 +131,185 @@ namespace Screenshoter.Data.File{
             using(Graphics captureGraphics = Graphics.FromImage(bmp)){
                 //copying image from The Screen to the bmp
                 captureGraphics.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size, CopyPixelOperation.SourceCopy);
+            }
+
+            //return
+            return bmp;
+        }
+    }
+
+    public partial class PngFile : IAsyncFile<Bitmap>{
+
+        //create, delete is copied directly from AsycnFileBase
+        /// <inheritdoc/>
+        /// <remarks> No exception is thrown, if success.</remarks>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file already exists.</exception>
+        /// <exception cref="System.IO.IOException"></exception>
+        public async Task CreateFileAsync(){
+            //check if already exists
+            if(this.FileExists){
+                throw new InvalidOperationException("File already exists.");
+            }
+
+            //create
+            try{
+                //perform
+                await Task.Run(() => {
+                    //create the file
+                    FileStream fs = new FileStream(this.FullPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read, 4096, true);
+                    //dispose
+                    fs.Dispose();
+                });
+            } catch (IOException e){
+                //rethrow exception
+                throw e;
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool CreateFileAsync(out FileStream fs){
+            //default value
+            fs = null;
+
+            //check if already exists
+            if(this.FileExists){
+                return false;
+            }
+
+            try{
+                //create the filestream, (along with file)
+                fs = new FileStream(this.FullPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read, 4096, true);
+            } catch (Exception){
+                //failed
+                return false;
+            }
+
+            return true;
+        }
+    
+        /// <inheritdoc/>
+        /// <remarks> No exception is thrown, if success.</remarks>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists.</exception>
+        /// <exception cref="System.IO.IOException"></exception>
+        public async Task DeleteFileAsync(){
+            //check if already exists
+            if(!this.FileExists){
+                throw new InvalidOperationException("File doesn't exists.");
+            }
+
+            try{
+                //delete file
+                await Task.Run(() => System.IO.File.Delete(this.FullPath));
+            } catch (IOException e){
+                //rethrow exception
+                throw e;
+            }
+        }
+
+    
+        /// <inheritdoc/>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists.</exception>
+        /// <exception cref="System.IO.IOException"></exception>
+        public async Task OverwriteFileAsync(Bitmap value){
+            //file doesn't exists
+            if(!this.FileExists){
+                //throw exception
+                throw new InvalidOperationException("File doesn't exists.");
+            }
+
+            //will hold the converted bitmap
+            Byte[] convertedBmp;
+            //convert the bitmap
+            using(MemoryStream ms = new MemoryStream()){
+                //save to stream
+                value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                //get value
+                convertedBmp = ms.ToArray();
+            }
+
+            try{
+                //create the filestream, (along with file)
+                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.Read, 4096, true)){
+                    //write to file
+                    await fs.WriteAsync(convertedBmp);
+                }
+            } catch (IOException e){
+                //rethrow exception
+                throw e;
+            }
+        }
+
+        /// <inheritdoc/>
+        /// <remarks> Make sure to free resource after.</remarks>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists, or filestream is invalid.</exception>
+        /// <exception cref="System.IO.IOException"></exception>
+        public async Task OverwriteFileAsync(System.IO.FileStream fs, Bitmap value){
+            //file doesn't exists
+            if(!this.FileExists){
+                //throw exception
+                throw new InvalidOperationException("File doesn't exists.");
+            }
+
+            //invalid filestream
+            if(!fs.CanWrite || fs.Name != this.FullPath){
+                //throw exception
+                throw new InvalidOperationException("Filestream is invalid.");
+            }
+
+            //will hold the converted bitmap
+            Byte[] convertedBmp;
+            //convert the bitmap
+            using(MemoryStream ms = new MemoryStream()){
+                //save to stream
+                value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                //get value
+                convertedBmp = ms.ToArray();
+            }
+
+            try{
+                //write to file
+                await fs.WriteAsync(convertedBmp);
+            } catch (IOException e){
+                //rethrow exception
+                throw e;
+            }
+        }
+
+        /// <inheritdoc/>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists.</exception>
+        /// <exception cref="System.IO.FileFormatException"> When the image file is empty.</exception>
+        public async Task<Bitmap> ReadFileAsync(){
+            //file doesn't exists
+            if(!this.FileExists){
+                //throw exception
+                throw new InvalidOperationException("File doesn't exists.");
+            }
+
+            //will hold the bmp
+            Bitmap bmp;
+            //will binary of the bitmap
+            Byte[] convertedBmp;
+
+            try{
+                //create the filestream, (along with file)
+                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true)){
+                    //update length
+                    convertedBmp = new Byte[fs.Length];
+                    //read file
+                    await fs.ReadAsync(convertedBmp, 0, (int)fs.Length);
+                }
+            } catch (IOException e){
+                //rethrow exception
+                throw e;
+            }
+
+            try{
+                //convert byte of array to bitmap
+                using(MemoryStream ms = new MemoryStream(convertedBmp)){
+                    bmp = new Bitmap(ms);
+                }
+            } catch (ArgumentException){
+                throw new FileFormatException("Image format is invalid, or is empty.");
             }
 
             //return
