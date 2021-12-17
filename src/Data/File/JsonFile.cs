@@ -42,10 +42,10 @@ namespace Screenshoter.Data.File{
         /// <inheritdoc/>
         /// <remarks> Make sure to free resource after.</remarks>
         /// <returns> Return true, if file is overwritten else file does not exist,
-        /// failed to overwrite or filestream is not for the same file.</returns>
+        /// failed to overwrite or filestream is invalid.</returns>
         public override bool OverwriteFile(FileStream fs, List<T> value){
-            //check if not file
-            if(fs.Name != this.FullPath){
+            //check if not file or cannot write
+            if(fs.Name != this.FullPath || !fs.CanWrite){
                 return false;
             }
 
