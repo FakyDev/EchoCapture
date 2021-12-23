@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
 
-using Screenshoter.Data;
-using Screenshoter.Data.File;
-using Screenshoter.Exceptions;
-using Screenshoter.Exceptions.Data;
+using EchoCapture.Data;
+using EchoCapture.Data.File;
+using EchoCapture.Exceptions;
+using EchoCapture.Exceptions.Data;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Command used to start or stop perform the operation of taking screenshot.</summary>
     public class TaskCommand : CommandBase{
@@ -20,7 +20,7 @@ namespace Screenshoter.Command{
         private const string STOP = "stop";
 
         /// <summary> The saved file name format, which will be changed into the time the screen capture was taken.</summary>
-        private const string FILENAME_FORMAT = "MM-dd-yyyy HH-mm-ss.fff";
+        private const string FILENAME_FORMAT = "MM-dd-yyyy HH-mm-ss-fff";
 
         /// <summary> (Get only) Reference to dictionary of help command's arg dictionary.</summary>
         private static Dictionary<int, CommandArg> commandArgs{
@@ -54,8 +54,8 @@ namespace Screenshoter.Command{
         public TaskCommand() : base("task", "Start or stop taking capture of the screen.", TaskCommand.commandArgs){}
 
         /// <inheritdoc/>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
         public override void OnSendEvent(string[] args){
             //validate arguments
             this.ValidateArguments(args);
@@ -108,7 +108,7 @@ namespace Screenshoter.Command{
         }
 
         /// <summary> Starts the operation of capturing screen.</summary>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"> Failed to read file.</exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"> Failed to read file.</exception>
         /// <exception cref="System.InvalidOperationException"> Already ongoing operation.</exception>
         private void StartWork(out int? delay){
             //default values
@@ -122,6 +122,11 @@ namespace Screenshoter.Command{
                 } catch (ReadingDataFileException){
                     //throw new exception
                     throw new ReadingDataFileException("Failed to start the operation of capturing screen.");
+                }
+
+                //if debug start debug process
+                if(Debug.IsDebug){
+                    Program.StartCaptureDebug();
                 }
 
                 //update state
@@ -226,7 +231,8 @@ namespace Screenshoter.Command{
                                 Debug.Dump(fileName, out fileName);
 
                                 //send to console
-                                Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
+                                //Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
+                                Program.Test($"Created file and saved the capture screen.\n\t{fileName}");
                             }
                         });
                     } else {
