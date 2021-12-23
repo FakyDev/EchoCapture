@@ -1,7 +1,7 @@
 using System;
-using Screenshoter.Exceptions;
+using EchoCapture.Exceptions;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Structure representing data about a command argument.</summary>
     public struct CommandArg{
@@ -89,7 +89,7 @@ namespace Screenshoter.Command{
         /// <param name="argument"> Argument to pass.</param>
         /// <param name="value"> Hold the passed value.</param>
         /// <exception cref="System.InvalidOperationException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
         public void Parse(string argument, out bool value){
             //check if not same type
             if(!this.IsType(typeof(bool))){
@@ -116,7 +116,7 @@ namespace Screenshoter.Command{
         /// <param name="argument"> Argument to pass.</param>
         /// <param name="value"> Hold the passed value.</param>
         /// <exception cref="System.InvalidOperationException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
         public void Parse(string argument, out int value){
             //check if not same type
             if(!this.IsType(typeof(int))){

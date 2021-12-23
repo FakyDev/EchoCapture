@@ -1,4 +1,4 @@
-namespace Screenshoter.Data{
+namespace EchoCapture.Data{
     
     /// <summary> Struct used for updating data in application data file.</summary>
     public struct UpdateData{

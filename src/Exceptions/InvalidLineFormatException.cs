@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, used when there is invalid format. To be precise, there is non-enclosed argument.</summary>
     public class InvalidLineFormatException : InvalidLineException{

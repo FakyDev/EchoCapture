@@ -1,4 +1,4 @@
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Interface for line exception.</summary>
     public interface IInvalidLineException{

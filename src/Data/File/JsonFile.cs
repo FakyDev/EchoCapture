@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Screenshoter.Data.File{
+namespace EchoCapture.Data.File{
 
     /// <summary> Allows you to read, create and parse JSON file.</summary>
     public class JsonFile<T> : FileBase<List<T>>{

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Screenshoter{
+namespace EchoCapture{
 
     /// <summary> Static class that is used for debugging or displaying information to user.</summary>
     public static class Debug{

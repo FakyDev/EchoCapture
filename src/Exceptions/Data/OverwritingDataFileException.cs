@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions.Data{
+namespace EchoCapture.Exceptions.Data{
     
     /// <summary> Defining that failed to overwrite data file for the application.</summary>
     public class OverwritingDataFileException : InvalidDataFileException{

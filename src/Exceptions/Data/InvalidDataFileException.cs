@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions.Data{
+namespace EchoCapture.Exceptions.Data{
 
     /// <summary> Base class for defining error related to application data file.</summary>
     public class InvalidDataFileException : Exception{

@@ -2,7 +2,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System;
 
-namespace Screenshoter.Data.File.Async{
+namespace EchoCapture.Data.File.Async{
 
     /// <summary> Base class for file with asynchronous functionality./summary>
     public abstract class AsyncFileBase<T> : IAsyncFile<T>{

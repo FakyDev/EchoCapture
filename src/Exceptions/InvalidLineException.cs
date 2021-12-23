@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Base exception, for line-related exception.</summary>
     public class InvalidLineException : Exception, IInvalidLineException{

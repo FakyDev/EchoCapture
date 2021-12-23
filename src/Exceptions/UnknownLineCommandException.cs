@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, that is used when undefined command is used.</summary>
     public class UnknownLineCommandException : InvalidLineException{

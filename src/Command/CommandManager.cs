@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Screenshoter.Exceptions;
+using EchoCapture.Exceptions;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Manages commands, allow functionality for commands.</summary>
     public static class CommandManager{
@@ -112,7 +112,7 @@ namespace Screenshoter.Command{
 
         /// <summary> Look for command which uses default prefix.</summary>
         /// <param name="commandName"> The command name to look for.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
         public static void CommandExist(string commandName){
             //loop through list
             foreach(ICommand command in CommandManager.CommandList){
@@ -129,7 +129,7 @@ namespace Screenshoter.Command{
         /// <summary> Look for command which uses default prefix, and return its reference.</summary>
         /// <param name="commandName"> The command name to look for.</param>
         /// <param name="outputCommand"> The command reference.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
         public static void CommandExist(string commandName, out ICommand outputCommand){
             //default value
             outputCommand = null;
@@ -152,7 +152,7 @@ namespace Screenshoter.Command{
         /// <summary> Look for command which uses custom prefix.</summary>
         /// <param name="commandPrefix"> The command prefix to look for.</param>
         /// <param name="commandName"> The command name to look for.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
         public static void CommandExist(char commandPrefix, string commandName){
             //loop through list
             foreach(ICommand command in CommandManager.CommandList){
@@ -170,7 +170,7 @@ namespace Screenshoter.Command{
         /// <param name="commandPrefix"> The command prefix to look for.</param>
         /// <param name="commandName"> The command name to look for.</param>
         /// <param name="outputCommand"> The command reference.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineCommandException"> Thrown when command doesn't exists.</exception>
         public static void CommandExist(char commandPrefix, string commandName, out ICommand outputCommand){
             //default value
             outputCommand = null;
@@ -230,7 +230,7 @@ namespace Screenshoter.Command{
         /// to have double quote around it.</remarks>
         /// <param name="line"> The line to parse.</param>
         /// <returns> Array of string or empty array.</returns>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineFormatException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineFormatException"></exception>
         private static string[] ParseArguments(string line){
             //check if empty
             if(line.Length == 0){

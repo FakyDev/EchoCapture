@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, used when the error is unknown.</summary>
     public class UnknownLineException : InvalidLineException{

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 
-using Screenshoter.Data.File;
-using Screenshoter.Exceptions.Data;
+using EchoCapture.Data.File;
+using EchoCapture.Exceptions.Data;
 
-namespace Screenshoter.Data{
+namespace EchoCapture.Data{
 
     /// <summary> Manages the application related data.</summary>
     public static class ApplicationData{
@@ -35,7 +35,7 @@ namespace Screenshoter.Data{
             }
         }
 
-        /// <inheritdoc cref="Screenshoter.Data.ApplicationData.ValidateDataFile"/>
+        /// <inheritdoc cref="EchoCapture.Data.ApplicationData.ValidateDataFile"/>
         /// <summary> Initialise the application data manager.</summary>
         public static void Initalise(){
             //has already initialised
@@ -52,8 +52,8 @@ namespace Screenshoter.Data{
 
         /// <summary> Update application data file.</summary>
         /// <param name="data"> Struct defining the update in the file.</param>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
         public static void UpdateFileData(UpdateData data){
             //will hold the data of the file
             List<Setting> content;
@@ -86,7 +86,7 @@ namespace Screenshoter.Data{
 
         /// <summary> Retrieve the folder path from the data file.</summary>
         /// <param name="path"> Will hold the retrieved path.</param>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         public static void GetFileData(out string path){
             //default value
             path = null;
@@ -104,7 +104,7 @@ namespace Screenshoter.Data{
 
         /// <summary> Retrieve the time interval value from the data file.</summary>
         /// <param name="interval"> Will hold the time interval value.</param>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         public static void GetFileData(out int? interval){
             //default value
             interval = null;
@@ -123,7 +123,7 @@ namespace Screenshoter.Data{
         /// <summary> Retrieve the folder path and time interval value from the data file.</summary>
         /// <param name="path"> Will hold the retrieved path.</param>
         /// <param name="interval"> Will hold the time interval value.</param>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         public static void GetFileData(out string path, out int? interval){
             //default value
             path = null;
@@ -142,8 +142,8 @@ namespace Screenshoter.Data{
         }
         
         /// <summary> Validate the file(s) holding data for the application.</summary>
-        /// <exception cref="Screenshoter.Exceptions.Data.OverwritingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.CreatingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.CreatingDataFileException"></exception>
         private static void ValidateDataFile(){
             //create list
             List<Setting> content = new List<Setting>();

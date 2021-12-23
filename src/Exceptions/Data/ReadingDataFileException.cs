@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions.Data{
+namespace EchoCapture.Exceptions.Data{
     
     /// <summary> Defining that failed to read data file for the application.</summary>
     public class ReadingDataFileException : InvalidDataFileException{

@@ -1,4 +1,4 @@
-namespace Screenshoter.Data.File{
+namespace EchoCapture.Data.File{
 
     /// <summary> Interface for a file class.</summary>
     public interface IFile<T>{

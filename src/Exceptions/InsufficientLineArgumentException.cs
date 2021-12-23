@@ -1,7 +1,7 @@
 using System;
-using Screenshoter.Command;
+using EchoCapture.Command;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, which determine there is not enough arguments.</summary>
     public class InsufficientLineArgumentException : InvalidLineException{

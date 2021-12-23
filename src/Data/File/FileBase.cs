@@ -1,7 +1,7 @@
 using System.IO;
 using System;
 
-namespace Screenshoter.Data.File{
+namespace EchoCapture.Data.File{
     
     /// <summary> Base file class, which provide common and basic functionality related to files.</summary>
     public abstract class FileBase<T> : IFile<T>{

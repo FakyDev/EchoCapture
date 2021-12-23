@@ -1,6 +1,6 @@
 using System;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, used when there is arguments used for command is invalid.</summary>
     public class InvalidLineArgumentException : InvalidLineException{

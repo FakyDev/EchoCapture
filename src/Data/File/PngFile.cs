@@ -4,9 +4,9 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
 
-using Screenshoter.Data.File.Async;
+using EchoCapture.Data.File.Async;
 
-namespace Screenshoter.Data.File{
+namespace EchoCapture.Data.File{
 
     /// <summary> It allows you to perform asynchronous and synchronous file-related operation to PNG image file. Those operation
     /// includes creating, deleting, reading and overwriting</summary>

@@ -1,7 +1,7 @@
 using System;
-using Screenshoter.Command;
+using EchoCapture.Command;
 
-namespace Screenshoter.Exceptions{
+namespace EchoCapture.Exceptions{
 
     /// <summary> Line exception, that is used when undefined argument is passed.</summary>
     public class UnknownLineArgumentException : InvalidLineException{

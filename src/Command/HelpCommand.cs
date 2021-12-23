@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Screenshoter.Exceptions;
+using EchoCapture.Exceptions;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Command used to provide the user with help about commands.</summary>
     public class HelpCommand : CommandBase{
@@ -23,7 +23,7 @@ namespace Screenshoter.Command{
         public HelpCommand() : base("help", "Shows list of commands and provide help.", HelpCommand.commandArgs){}
 
         /// <inheritdoc/>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineArgumentException"></exception>
         public override void OnSendEvent(string[] args){
             //validate arguments
             this.ValidateArguments(args, 1);

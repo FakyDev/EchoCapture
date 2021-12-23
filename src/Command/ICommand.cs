@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Interface for commands.</summary>
     public interface ICommand{

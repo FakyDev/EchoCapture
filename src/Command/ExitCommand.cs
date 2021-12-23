@@ -1,4 +1,4 @@
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Command that allows the user to close the program.</summary>
     public class ExitCommand : CommandBase{

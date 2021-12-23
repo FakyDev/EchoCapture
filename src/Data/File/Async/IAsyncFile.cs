@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Screenshoter.Data.File.Async{
+namespace EchoCapture.Data.File.Async{
 
     /// <summary> Interface for file class, which uses asynchronous operation.</summary>
     public interface IAsyncFile<T>{

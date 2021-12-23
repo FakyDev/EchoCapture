@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-using Screenshoter.Exceptions;
+using EchoCapture.Exceptions;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
     public delegate void CommandSend(string[] args);
 
     /// <summary> Base class for command.</summary>
@@ -158,9 +158,9 @@ namespace Screenshoter.Command{
 
         /// <summary> Verify if arguments sent, is valid.</summary>
         /// <param name="args"> Array of string passed as arguments.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InsufficientLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InsufficientLineArgumentException"></exception>
         protected void ValidateArguments(string[] args){
             //check if empty
             if(this.ArgsList == null || this.ArgsList.Count == 0){
@@ -229,9 +229,9 @@ namespace Screenshoter.Command{
         /// <summary> Verify if arguments sent, is valid. This overload requires args length of at least <paramref name="minArg"/> to start validating argument.</summary>
         /// <param name="args"> Array of string passed as arguments.</param>
         /// <param name="minArg"> The minimum amount of args require to start validating.</param>
-        /// <exception cref="Screenshoter.Exceptions.UnknownLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InsufficientLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InsufficientLineArgumentException"></exception>
         protected void ValidateArguments(string[] args, int minArg){
             //stop
             if(args.Length < minArg){

@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
-using Screenshoter.Exceptions;
-using Screenshoter.Data;
+using EchoCapture.Exceptions;
+using EchoCapture.Data;
 
-namespace Screenshoter.Command{
+namespace EchoCapture.Command{
 
     /// <summary> Command used to modify application data file.</summary>
     public class SettingCommand : CommandBase{
@@ -42,10 +42,10 @@ namespace Screenshoter.Command{
         public SettingCommand() : base("setting", "Allows you to show and update application's settings.", SettingCommand.commandArgs){}
 
         /// <inheritdoc/>
-        /// <exception cref="Screenshoter.Exceptions.InsufficientLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InsufficientLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
         public override void OnSendEvent(string[] args){
             //validate arguments for at least 1 arguments
             try{
@@ -125,7 +125,7 @@ namespace Screenshoter.Command{
         }
 
         /// <summary> Get the application settings, and output to user.</summary>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         private void DisplayData(){
             //will hold the value
             string folderPath;
@@ -141,9 +141,9 @@ namespace Screenshoter.Command{
         /// <summary> Update the folder path, along with validating the path.</summary>
         /// <remarks> No exception if successful.</remarks>
         /// <param name="path"> The path to saved.</param>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.OverwritingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         private void UpdateFolder(string path){
             //reference instance
             CommandArg arg = this.ArgsList[1];
@@ -168,9 +168,9 @@ namespace Screenshoter.Command{
         /// <remarks> No exception if successful.</remarks>
         /// <param name="nonParsedvalue"> The non-parsed string value, which will be parsed to integer.</param>
         /// <param name="nonParsedvalue"> The parsed integer value.</param>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.OverwritingDataFileException"></exception>
-        /// <exception cref="Screenshoter.Exceptions.Data.ReadingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         private void UpdateInterval(string nonParsedvalue, out int parsedValue){
             //reference instance
             CommandArg arg = this.ArgsList[1];
@@ -199,7 +199,7 @@ namespace Screenshoter.Command{
 
 
         /// <summary> Validates the path passed.</summary>
-        /// <exception cref="Screenshoter.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
         private static void ValidatePath(string path, CommandArg arg, Type valueType){
             //check if not rooted
             if(!Path.IsPathRooted(path)){
