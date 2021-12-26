@@ -7,6 +7,7 @@ using EchoCapture.Data;
 using EchoCapture.Data.File;
 using EchoCapture.Exceptions;
 using EchoCapture.Exceptions.Data;
+using EchoCapture.Networking;
 
 namespace EchoCapture.Command{
 
@@ -22,6 +23,10 @@ namespace EchoCapture.Command{
         /// <summary> The saved file name format, which will be changed into the time the screen capture was taken.</summary>
         private const string FILENAME_FORMAT = "MM-dd-yyyy HH-mm-ss-fff";
 
+        /// <summary> Format when using debug window.</summary>
+        private const string DEBUG_FORMAT = "[HH:mm:ss.fff]";
+
+
         /// <summary> (Get only) Reference to dictionary of help command's arg dictionary.</summary>
         private static Dictionary<int, CommandArg> commandArgs{
             get{
@@ -35,8 +40,19 @@ namespace EchoCapture.Command{
             }
         }
 
+
         /// <summary> Determine if can perform async task, which is take screenshot.</summary>
         private bool isRunning = false;
+
+        /// <summary> Hold the cancellation token of the current asycn task.</summary>
+        private CancellationTokenSource cancelTokenSource = null;
+
+        /// <summary> Hold the asycn task.</summary>
+        private Task work = null;
+        
+        /// <summary> Hold the client, to send data.</summary>
+        private static SocketClient client = null;
+
 
         /// <summary> (Get only) Determing if performing the task.</summary>
         public bool IsPerforming{
@@ -44,12 +60,6 @@ namespace EchoCapture.Command{
                 return this.isRunning;
             }
         }
-
-        /// <summary> Hold the cancellation token of the current asycn task.</summary>
-        private CancellationTokenSource cancelTokenSource = null;
-
-        /// <summary> Hold the asycn task.</summary>
-        private Task work = null;
 
         public TaskCommand() : base("task", "Start or stop taking capture of the screen.", TaskCommand.commandArgs){}
 
@@ -77,7 +87,7 @@ namespace EchoCapture.Command{
                     return;
                 } catch (InvalidOperationException e){
                     //send error to user
-                    Debug.Warning(e.Message);
+                    Debug.Error(e.Message);
                     return;
                 }
 
@@ -127,6 +137,8 @@ namespace EchoCapture.Command{
                 //if debug start debug process
                 if(Debug.IsDebug){
                     Program.StartCaptureDebug();
+                    //update reference
+                    TaskCommand.client = (SocketClient) Program._Socket;
                 }
 
                 //update state
@@ -160,9 +172,15 @@ namespace EchoCapture.Command{
                     }
                 }
 
+                //request the debug to stop
+                try{
+                    TaskCommand.client.DropRequest();
+                } catch (InvalidOperationException){}
+
                 //update values
                 this.work = null;
                 this.cancelTokenSource = null;
+                TaskCommand.client = null;
 
                 return;
             }
@@ -204,6 +222,7 @@ namespace EchoCapture.Command{
         private async static Task ScreenshotAndSave(){
             //parse format to current time
             string date = DateTime.Now.ToString(TaskCommand.FILENAME_FORMAT);
+            string debugDate = DateTime.Now.ToString(TaskCommand.DEBUG_FORMAT);
 
             //create instance
             PngFile file = new PngFile(date, ApplicationData.DataFolder);
@@ -223,31 +242,24 @@ namespace EchoCapture.Command{
                         fs.Dispose();
 
                         //async debug
-                        Task debugOperation = Task.Run(() => {
-                            if(Debug.IsDebug){
-                                //create file name
-                                string fileName = $"{date}.{file.Extension}";
-                                //convert to debug string
-                                Debug.Dump(fileName, out fileName);
-
-                                //send to console
-                                //Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
-                                Program.Test($"Created file and saved the capture screen.\n\t{fileName}");
-                            }
-                        });
+                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                            Task debugOpertion = Task.Run(() => {
+                                //create line
+                                string line = $"{debugDate} Created file and saved the capture screen; {date}.{file.Extension}";
+                                //send
+                                TaskCommand.client.SendMessage(line);
+                            });
+                        }
                     } else {
                         //async debug
-                        Task debugOperation = Task.Run(() => {
-                            if(Debug.IsDebug){
-                                //create file name
-                                string fileName = $"{date}.{file.Extension}";
-                                //convert to debug string
-                                Debug.Dump(fileName, out fileName);
-
-                                //send to console
-                                Debug.Error($"Failed to create file.\n\t{fileName}");
-                            }
-                        });
+                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                            Task debugOpertion = Task.Run(() => {
+                                //create line
+                                string line = $"{debugDate} Failed to create file storing capture screen; {date}.{file.Extension}";
+                                //send
+                                TaskCommand.client.SendMessage(line, TransferType.ErrorMessage);
+                            });
+                        }
                     }
                 }
             } else {
@@ -257,17 +269,14 @@ namespace EchoCapture.Command{
                     await file.OverwriteFileAsync(bmp);
 
                     //async debug
-                    Task debugOperation = Task.Run(() => {
-                        if(Debug.IsDebug){
-                            //create file name
-                            string fileName = $"{date}.{file.Extension}";
-                            //convert to debug string
-                            Debug.Dump(fileName, out fileName);
-
-                            //send to console
-                            Debug.Success($"Saved the capture screen.\n\t{fileName}");
-                        }
-                    });
+                    if(Debug.IsDebug && TaskCommand.client.Connected){
+                        Task debugOpertion = Task.Run(() => {
+                            //create line
+                            string line = $"{debugDate} Saved the capture screen; {date}.{file.Extension}";
+                            //send
+                            TaskCommand.client.SendMessage(line);
+                        });
+                    }
                 }
             }
         }
