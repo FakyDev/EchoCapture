@@ -274,6 +274,17 @@ namespace EchoCapture{
             output = null;
         }
 
+        /// <summary> Format bytes into hex.</summary>
+        public static void FormatBytes(Byte[] bytes){
+            //will be updated
+            string value = "";
+            foreach (byte byt in bytes){
+                value += string.Format("{0:X2} ", byt);
+            }
+
+            Console.WriteLine(value);
+        }
+
         /// <summary> Leave an empty line, basically <see cref="System.Console.WriteLine"/>.</summary>
         public static void SkipLine(){
             Console.WriteLine();
