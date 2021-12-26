@@ -409,5 +409,10 @@ namespace EchoCapture.Command{
             //filter and return args
             return finalArgs.Where((source, index) => source != string.Empty).ToArray();
         }
+    
+        /// <summary> Search up the list of command and return the first one where type matches.</summary>
+        public static T SearchCommand<T>() where T : ICommand{
+            return (T) CommandManager.CommandList.Find(x => x.GetType() == typeof(T));
+        }
     }
 }

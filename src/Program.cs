@@ -64,24 +64,20 @@ namespace EchoCapture{
 
 
         public static void Main(string[] args){
-            try{
-                //update state
-                if(args.Length == 2 && args[0] == "captureDebug"){
-                    Program.currentState = ApplicationState.Debug;
-                } else {
-                    Program.currentState = ApplicationState.Normal;
-                }
-                
-                //intialise application
-                Program.Initialise();
-                //perform operation
-                if(Program.DebugState){
-                    Program.PerformDebug(SocketListener.LocalIp, Int32.Parse(args[1]));
-                } else {
-                    Program.PerformDefault();
-                }
-            } catch (Exception){} finally{
-                Program.OnExit(null, null);
+            //update state
+            if(args.Length == 2 && args[0] == "captureDebug"){
+                Program.currentState = ApplicationState.Debug;
+            } else {
+                Program.currentState = ApplicationState.Normal;
+            }
+            
+            //intialise application
+            Program.Initialise();
+            //perform operation
+            if(Program.DebugState){
+                Program.PerformDebug(Networkable.LocalIp, Int32.Parse(args[1]));
+            } else {
+                Program.PerformDefault();
             }
         }
 
@@ -90,8 +86,7 @@ namespace EchoCapture{
             //for capture debug mode
             if(Program.currentState == ApplicationState.Debug){
                 //disable input
-                //Console.ReadKey(false);
-                //Console.CursorVisible = false;
+                Console.CursorVisible = false;
                 return;
             }
 
@@ -99,7 +94,7 @@ namespace EchoCapture{
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(Program.OnExit);
 
             //display message
-            string msg = Program.ApplicationName + " v" + Program.ApplicationVersion + ", for capturing your screen at a time-interval.\n" +
+            string msg = $"{Program.ApplicationName} v{Program.ApplicationVersion}, for capturing your screen at a time-interval.\n" +
             "Copyright (C) 2021  FakyDev\n\n" +
 
             "This program is free software: you can redistribute it and/or modify\n" +
@@ -115,7 +110,7 @@ namespace EchoCapture{
             "You should have received a copy of the GNU Affero General Public License\n" +
             "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\n" +
             
-            "Github: https://github.com/FakyDev/Screenshoter";
+            $"Github: https://github.com/FakyDev/{Program.ApplicationName}";
 
             //message
             Debug.Message(msg);
@@ -154,10 +149,6 @@ namespace EchoCapture{
             //disable from running
             Program.canRun = false;
         }
-    
-        public static void Test(string msg){
-            ((SocketClient)Program.socket).SendMessage(msg+"<EOF>");
-        }
     }
 
     //this part of the class is for the capture debug state
@@ -171,6 +162,22 @@ namespace EchoCapture{
 
         /// <summary> Hold the client.</summary>
         private static SocketClient client = null;
+
+        /// <summary> Hold the instance of the task command.</summary>
+        private static TaskCommand taskCommand = null;
+
+        /// <summary> (Get only) Return the instance of the task command.</summary>
+        private static TaskCommand TaskCommand{
+            get{
+                //update
+                if(Program.taskCommand == null){
+                    Program.taskCommand = CommandManager.SearchCommand<TaskCommand>();
+                }
+
+                //return
+                return Program.taskCommand;
+            }
+        }
 
         /// <summary> (Get only) Return the process of the debug console for capture screen.</summary>
         public static Process DebugProcess{
@@ -186,7 +193,7 @@ namespace EchoCapture{
         }
 
         /// <summary> (Get only) Return the client or the server, based on application state.</summary>
-        public static INetworkable socket{
+        public static INetworkable _Socket{
             get{
                 //return server
                 if(Program.server != null){
@@ -219,26 +226,31 @@ namespace EchoCapture{
             listener.StartListening();
 
             //accecpt request
-            Socket handler = listener.AllowRequest();
+            Socket handler = listener.GetRequest();
 
-            do{
-                // Incoming data from the client.
-                string data = null;
-                byte[] bytes = null;
+            //while connection is there
+            while(handler.Connected){
+                //get data and parse it
+                TransferData data = Networkable.ParseRequest(handler);
 
-                while (true)
-                {
-                    bytes = new byte[1024];
-                    int bytesRec = handler.Receive(bytes);
-                    data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                    if (data.IndexOf("<EOF>") > -1)
-                    {
-                        break;
-                    }
+                //different transfer type, different handling
+                switch(data.TType){
+                    case TransferType.DefaultMessage:
+                        Debug.Message(data.Message);
+                    break;
+
+                    case TransferType.ErrorMessage:
+                        Debug.Error(data.Message);
+                    break;
+
+                    case TransferType.Drop:
+                        //disconnect client and wont reuse
+                        handler.Disconnect(false);
+                        //stop listening
+                        Program.server.StopListening();
+                    break;
                 }
-
-                Debug.Success(data.Replace("<EOF>", ""));
-            } while (handler.Connected);
+            }
         }
 
         /// <summary> Start another process in a new window, to debug capture screen.</summary>
@@ -250,12 +262,14 @@ namespace EchoCapture{
             }
 
             //get free port
-            int port = SocketListener.FreePort;
+            int port = Networkable.FreePort;
 
             //create instance
             Process process = new Process();
+            //enables events
+            process.EnableRaisingEvents = true;
             //set executable
-            process.StartInfo.FileName = Program.ApplicationName + ".exe";
+            process.StartInfo.FileName = ApplicationData.AppLocation + System.IO.Path.DirectorySeparatorChar + Program.ApplicationName + ".exe";
             //set argument
             process.StartInfo.Arguments = $"captureDebug {port}";
             //set hidden
@@ -264,13 +278,16 @@ namespace EchoCapture{
             process.StartInfo.CreateNoWindow = false;
             process.StartInfo.UseShellExecute = true;
 
+            //add event which will be call inside default when debug is killed
+            process.Exited += new EventHandler(Program.OnDebugExit);
+
             //update reference
             Program.debugProcess = process;
 
             //start process
             if(process.Start()){
                 //create client
-                Program.client = new SocketClient(SocketListener.LocalIp, port);
+                Program.client = new SocketClient(Networkable.LocalIp, port);
                 //connect client
                 Program.ConnectClient();
             }
@@ -288,7 +305,7 @@ namespace EchoCapture{
             }
         }
 
-        /// <summary> Called just before application is exited.</summary>
+        /// <summary> Called when application is exited, in both state.</summary>
         private static void OnExit(object sender, EventArgs e){
             //kill process
             if(Program.DebugProcess != null){
@@ -297,10 +314,20 @@ namespace EchoCapture{
 
             //disable send and request and dispose
             if(Program.server != null){
-                //try to convert
-                try{
-                    Program.server.StopListening();
-                } catch (InvalidCastException){}
+                Program.server.StopListening();
+            }
+        }
+        
+        /// <summary> Called in default state when application in debug state is exited.</summary>
+        private static void OnDebugExit(object sender, EventArgs e){
+            //try to disconnect client from server
+            try{
+                Program.client.Disconnect();
+            } catch (InvalidOperationException){}
+
+            //notify
+            if(Program.TaskCommand.IsPerforming){
+                Debug.Warning("Debugger has been closed! Capture screen will continue to be saved.");
             }
         }
     }
