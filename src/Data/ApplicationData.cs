@@ -23,17 +23,25 @@ namespace EchoCapture.Data{
         }
 
         /// <summary> (Get only) Return path to the data folder.</summary>
-        public static string DataFolder{
+        internal static string DataFolder{
             get{
                 //get the path
                 if(Debug.IsDebug){
-                    return System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location) + @"\appData";
+                    return System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location) + System.IO.Path.DirectorySeparatorChar + "appData";
                 }
 
                 //return
                 return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.ApplicationName);
             }
         }
+
+        /// <summary> (Get only) Return path to the application folder.</summary>
+        internal static string AppLocation{
+            get{
+                return System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            }
+        }
+
 
         /// <inheritdoc cref="EchoCapture.Data.ApplicationData.ValidateDataFile"/>
         /// <summary> Initialise the application data manager.</summary>
@@ -67,11 +75,9 @@ namespace EchoCapture.Data{
 
             //update data
             if(data.UpdateType == UpdateData.DataType.path){
-                //content[0].SavedPath = data.Path;
                 updatedContent.SavedPath = data.Path;
             }
             if(data.UpdateType == UpdateData.DataType.timeout){
-                //content[0].TimeoutMS = data.Timeout;
                 updatedContent.TimeoutMS = data.Timeout;
             }
 
