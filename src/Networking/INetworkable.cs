@@ -3,18 +3,18 @@ namespace EchoCapture.Networking{
     /// <summary> Interface for networkable objects.</summary>
     public interface INetworkable{
 
-        /// <summary> (Get only) Return the port of the socket.</summary>
+        /// <summary> (Get only) Return the port using.</summary>
         int? Port{
             get;
         }
 
-        /// <summary> (Get only) Return the ip address of the socket.</summary>
+        /// <summary> (Get only) Return the ip address.</summary>
         string IpAddress{
             get;
         }
 
-        /// <summary> (Get only) Return the socket.</summary>
-        System.Net.Sockets.Socket _Socket{
+        /// <summary> (Get only) Return if socket is connected.</summary>
+        bool Connected{
             get;
         }
     }
