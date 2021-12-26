@@ -225,7 +225,7 @@ namespace EchoCapture.Command{
             //update instance
             if(SettingCommand.taskCommand == null){
                 //loop through command list
-                foreach (ICommand command in CommandManager.CommandList){
+                /*foreach (ICommand command in CommandManager.CommandList){
                     //same type
                     if(command.GetType() == typeof(TaskCommand)){
                         //update
@@ -233,7 +233,9 @@ namespace EchoCapture.Command{
 
                         return;
                     }
-                }
+                }*/
+
+                SettingCommand.taskCommand = CommandManager.SearchCommand<TaskCommand>();
             }
         }
     }
