@@ -2,11 +2,9 @@
 using System.Reflection;
 using System.Diagnostics;
 using System.Net.Sockets;
-using System.Text;
 
 using EchoCapture.Command;
 using EchoCapture.Data;
-
 using EchoCapture.Networking;
 
 namespace EchoCapture{
@@ -87,11 +85,15 @@ namespace EchoCapture{
             if(Program.currentState == ApplicationState.Debug){
                 //disable input
                 Console.CursorVisible = false;
+
+                //update log
+                System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog("Debugger application has started.");
                 return;
             }
 
             //add event
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(Program.OnExit);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(Program.OnExit);
 
             //display message
             string msg = $"{Program.ApplicationName} v{Program.ApplicationVersion}, for capturing your screen at a time-interval.\n" +
@@ -119,6 +121,9 @@ namespace EchoCapture{
             //initialise command manager and application data
             CommandManager.Initialise();
             ApplicationData.Initalise();
+
+            //update log
+            System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog("Default application has started.");
         }
 
         /// <summary> Perform application's task for normal state.</summary>        
@@ -307,6 +312,9 @@ namespace EchoCapture{
 
         /// <summary> Called when application is exited, in both state.</summary>
         private static void OnExit(object sender, EventArgs e){
+            //log
+            System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(Program.DebugState ? "Debugger application has exited." : "Default application has exited.");
+
             //kill process
             if(Program.DebugProcess != null){
                 Program.DebugProcess.Kill();

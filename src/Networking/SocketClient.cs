@@ -37,9 +37,7 @@ namespace EchoCapture.Networking{
             this.socket = client;
 
             //debug msg
-            if(Debug.IsDebug){
-                Debug.Warning($"Connected to {endPoint}");
-            }
+            Debug.DebugWarning($"Connected to {endPoint}.");
         }
 
         /// <summary> Disconnects client from the server.</summary>
@@ -65,9 +63,7 @@ namespace EchoCapture.Networking{
             this.port = null;
 
             //send msg
-            if(Debug.IsDebug){
-                Debug.Warning($"Disconnected from {info}.");
-            }
+            Debug.DebugWarning($"Disconnected from {info}.");
         }
 
 

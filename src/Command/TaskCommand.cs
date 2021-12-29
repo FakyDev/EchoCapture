@@ -84,15 +84,21 @@ namespace EchoCapture.Command{
                 } catch (ReadingDataFileException e){
                     //send error to user
                     Debug.Error(e.Message);
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog(e.Message);
                     return;
                 } catch (InvalidOperationException e){
                     //send error to user
                     Debug.Error(e.Message);
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog(e.Message);
                     return;
                 }
 
                 //notice user
                 Debug.Success($"The operation of capturing screen each {delay}ms, has successfully started.");
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The operation of capturing screen each {delay}ms, has successfully started.");
                 return;
             }
 
@@ -103,11 +109,15 @@ namespace EchoCapture.Command{
                 } catch(InvalidOperationException e){
                     //send error to user
                     Debug.Error(e.Message);
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog(e.Message);
                     return;
                 }
 
                 //notice user
                 Debug.Success("Operation was successfully ended.");
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog("Operation was successfully ended.");
                 return;
             }
 
@@ -220,9 +230,12 @@ namespace EchoCapture.Command{
 
         /// <summary> Screenshot the display and save it, asynchronously.</summary>
         private async static Task ScreenshotAndSave(){
+            //get the date and time of screenshot
+            DateTime screenshotDateTime = DateTime.Now;
+
             //parse format to current time
-            string date = DateTime.Now.ToString(TaskCommand.FILENAME_FORMAT);
-            string debugDate = DateTime.Now.ToString(TaskCommand.DEBUG_FORMAT);
+            string date = screenshotDateTime.ToString(TaskCommand.FILENAME_FORMAT);
+            string debugDate = screenshotDateTime.ToString(TaskCommand.DEBUG_FORMAT);
 
             //create instance
             PngFile file = new PngFile(date, ApplicationData.DataFolder);
@@ -236,47 +249,91 @@ namespace EchoCapture.Command{
                 using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
                     //create file
                     if(file.CreateFileAsync(out fs)){
-                        //save screenshot
-                        await file.OverwriteFileAsync(fs, bmp);
-                        //free resource
-                        fs.Dispose();
+                        try{
+                            //save screenshot
+                            await file.OverwriteFileAsync(fs, bmp);
+                        } catch(System.IO.IOException){
+                            //async debug
+                            if(Debug.IsDebug && TaskCommand.client.Connected){
+                                Task debugOpertion = Task.Run(() => {
+                                    //create line
+                                    string line = $"{debugDate} Failed to save capture screen: \"{date}.{file.Extension}\"";
+                                    //send
+                                    TaskCommand.client.SendMessage(line);
+                                });
+                            }
+
+                            //log
+                            Task _updateLog = ApplicationData.UpdateLog($"Failed to save capture screen: \"{date}.{file.Extension}\".");
+
+                            return;
+                        } finally {
+                            //free resource
+                            fs.Dispose();
+                        }
 
                         //async debug
                         if(Debug.IsDebug && TaskCommand.client.Connected){
                             Task debugOpertion = Task.Run(() => {
                                 //create line
-                                string line = $"{debugDate} Created file and saved the capture screen; {date}.{file.Extension}";
+                                string line = $"{debugDate} Created file and saved the capture screen: \"{date}.{file.Extension}\"";
                                 //send
                                 TaskCommand.client.SendMessage(line);
                             });
                         }
+
+                        //log
+                        Task updateLog = ApplicationData.UpdateLog($"Created file and saved the capture screen: \"{date}.{file.Extension}\".");
                     } else {
                         //async debug
                         if(Debug.IsDebug && TaskCommand.client.Connected){
                             Task debugOpertion = Task.Run(() => {
                                 //create line
-                                string line = $"{debugDate} Failed to create file storing capture screen; {date}.{file.Extension}";
+                                string line = $"{debugDate} Failed to create file storing capture screen: \"{date}.{file.Extension}\"";
                                 //send
                                 TaskCommand.client.SendMessage(line, TransferType.ErrorMessage);
                             });
                         }
+
+                        //log
+                        Task updateLog = ApplicationData.UpdateLog($"Failed to create file storing capture screen: \"{date}.{file.Extension}\".");
                     }
                 }
             } else {
                 //screenshot
                 using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
-                    //save screenshot
-                    await file.OverwriteFileAsync(bmp);
+                    try{
+                        //save screenshot
+                        await file.OverwriteFileAsync(bmp);
+                    } catch(System.IO.IOException){
+                        //async debug
+                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                            Task debugOpertion = Task.Run(() => {
+                                //create line
+                                string line = $"{debugDate} Failed to save capture screen: \"{date}.{file.Extension}\"";
+                                //send
+                                TaskCommand.client.SendMessage(line);
+                            });
+                        }
+
+                        //log
+                        Task _updateLog = ApplicationData.UpdateLog($"Failed to save capture screen: \"{date}.{file.Extension}\".");
+
+                        return;
+                    }
 
                     //async debug
                     if(Debug.IsDebug && TaskCommand.client.Connected){
                         Task debugOpertion = Task.Run(() => {
                             //create line
-                            string line = $"{debugDate} Saved the capture screen; {date}.{file.Extension}";
+                            string line = $"{debugDate} Saved the capture screen: \"{date}.{file.Extension}\"";
                             //send
                             TaskCommand.client.SendMessage(line);
                         });
                     }
+
+                    //log
+                    Task updateLog = ApplicationData.UpdateLog($"Saved the capture screen: \"{date}.{file.Extension}\".");
                 }
             }
         }

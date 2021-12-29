@@ -85,6 +85,8 @@ namespace EchoCapture.Command{
                 if(SettingCommand.taskCommand.IsPerforming){
                     //notice user
                     Debug.Error("Cannot update folder path while performing task.");
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog("Cannot update folder path while performing task.");
 
                     return;
                 }
@@ -94,6 +96,8 @@ namespace EchoCapture.Command{
 
                 //inform user
                 Debug.Success("Folder path has been updated.");
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Folder path has been updated to \"{args[1]}\".");
                 return;
             } 
             
@@ -103,6 +107,8 @@ namespace EchoCapture.Command{
                 if(SettingCommand.taskCommand.IsPerforming){
                     //notice user
                     Debug.Error("Cannot update time interval while performing task.");
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog("Cannot update time interval while performing task.");
 
                     return;
                 }
@@ -115,6 +121,8 @@ namespace EchoCapture.Command{
 
                 //inform user
                 Debug.Success($"Time interval has been set to {parsedValue}ms.");
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Time interval has been set to {parsedValue}ms.");
                 return;
             }
 
@@ -224,17 +232,6 @@ namespace EchoCapture.Command{
         public override void OnAfterAllCommandsInitialise(){
             //update instance
             if(SettingCommand.taskCommand == null){
-                //loop through command list
-                /*foreach (ICommand command in CommandManager.CommandList){
-                    //same type
-                    if(command.GetType() == typeof(TaskCommand)){
-                        //update
-                        SettingCommand.taskCommand = (TaskCommand)command;
-
-                        return;
-                    }
-                }*/
-
                 SettingCommand.taskCommand = CommandManager.SearchCommand<TaskCommand>();
             }
         }

@@ -76,8 +76,8 @@ namespace EchoCapture.Networking{
             this.port = endPoint.Port;
 
             //send msg
+            Debug.DebugWarning($"Listening on {endPoint}.");
             if(Debug.IsDebug){
-                Debug.Warning($"Listening on {endPoint}.");
                 Debug.SkipLine();
             }
 
@@ -108,9 +108,7 @@ namespace EchoCapture.Networking{
             this.port = null;
 
             //send msg
-            if(Debug.IsDebug){
-                Debug.Warning($"Stopped listening on {info}.");
-            }
+            Debug.DebugWarning($"Stopped listening on {info}.");
 
             //call event
             this.OnClose?.Invoke(null);
@@ -129,9 +127,7 @@ namespace EchoCapture.Networking{
             Socket handler = this.socket.Accept();
 
             //send msg
-            if(Debug.IsDebug){
-                Debug.Warning($"Client({handler.LocalEndPoint}) is connected.");
-            }
+            Debug.DebugWarning($"Client({handler.LocalEndPoint}) is connected.");
 
             return handler;
         }
@@ -142,8 +138,8 @@ namespace EchoCapture.Networking{
             this.socket.Disconnect(true);
 
             //send msg
+            Debug.DebugWarning($"Temporarily stopped listening on {this.socket.LocalEndPoint}.");
             if(Debug.IsDebug){
-                Debug.Warning($"Temporarily stopped listening on {this.socket.LocalEndPoint}.");
                 Debug.SkipLine();
             }
         }
