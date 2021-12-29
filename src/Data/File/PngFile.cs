@@ -50,7 +50,7 @@ namespace EchoCapture.Data.File{
 
             try{
                 //create file stream
-                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.None, 4096, true)){
+                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.None, 4096, false)){
                     //save
                     value.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
                 }
@@ -228,7 +228,7 @@ namespace EchoCapture.Data.File{
             }
 
             try{
-                //create the filestream, (along with file)
+                //create the filestream
                 using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.Read, 4096, true)){
                     //write to file
                     await fs.WriteAsync(convertedBmp);
@@ -243,7 +243,7 @@ namespace EchoCapture.Data.File{
         /// <remarks> Make sure to free resource after.</remarks>
         /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists, or filestream is invalid.</exception>
         /// <exception cref="System.IO.IOException"></exception>
-        public async Task OverwriteFileAsync(System.IO.FileStream fs, Bitmap value){
+        public async Task OverwriteFileAsync(FileStream fs, Bitmap value){
             //file doesn't exists
             if(!this.FileExists){
                 //throw exception
@@ -291,7 +291,7 @@ namespace EchoCapture.Data.File{
             Byte[] convertedBmp;
 
             try{
-                //create the filestream, (along with file)
+                //create the filestream
                 using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true)){
                     //update length
                     convertedBmp = new Byte[fs.Length];
