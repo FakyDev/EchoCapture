@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 
+using EchoCapture.Data;
+
 namespace EchoCapture{
 
-    /// <summary> Static class that is used for debugging or displaying information to user.</summary>
+    /// <summary> It is used for debugging, logging or displaying information to user and contains extension for debugging.</summary>
     public static class Debug{
         
         /// <summary> (Get only) Return if application, is in development or production.</summary>
@@ -18,7 +20,7 @@ namespace EchoCapture{
         }
         
         /// <summary> Output the boolean, to console.</summary>
-        public static void Dump(bool value){
+        public static void Dump(this bool value){
             //check if true or false
             string svalue;
             if(value){
@@ -51,7 +53,7 @@ namespace EchoCapture{
 
         /// <summary> Output the length of string, along with its content to console.</summary>
         /// <param name="value"> The string to debug.</param>
-        public static void Dump(string value){
+        public static void Dump(this string value){
             //create info
             value = "string(" + value.Length + ", \"" + value + "\")";
 
@@ -68,7 +70,7 @@ namespace EchoCapture{
         }
 
         /// <summary> Output the integer to console.</summary>
-        public static void Dump(int value){
+        public static void Dump(this int value){
             //create line
             string output = "int(" + value + ")";
 
@@ -86,7 +88,7 @@ namespace EchoCapture{
         /// <summary> Debug the List and output to console.</summary>
         /// <param name="value"> The LinkedList to debug.</param>
         /// <exception cref="System.ArgumentException"> If T is invalid.</exception>
-        public static void Dump<T>(List<T> value){
+        public static void Dump<T>(this List<T> value){
             //check if is a valid type
             if(typeof(T) != typeof(int) && typeof(T) != typeof(string) && typeof(T) != typeof(bool)){
                 throw new ArgumentException("Type T is invalid, to be display with the list.");
@@ -168,7 +170,7 @@ namespace EchoCapture{
         /// <summary> Debug the LinkedList and output to console.</summary>
         /// <param name="value"> The LinkedList to debug.</param>
         /// <exception cref="System.ArgumentException"> If T is invalid.</exception>
-        public static void Dump<T>(LinkedList<T> value){
+        public static void Dump<T>(this LinkedList<T> value){
             //check if is a valid type
             if(typeof(T) != typeof(int) && typeof(T) != typeof(string) && typeof(T) != typeof(bool)){
                 throw new ArgumentException("Type T is invalid, to be display with the list.");
@@ -332,6 +334,75 @@ namespace EchoCapture{
             Console.WriteLine(msg);
             //reset color
             Console.ResetColor();
+        }
+
+
+        /// <summary> If debug is enabled, output to console and log message if enabled.</summary>
+        /// <remarks> Logging occures even if debug is disable. Only <paramref name="log"/> can change that.</remarks>
+        public static void DebugMessage(string msg, bool log = true){
+            if(log){
+                //log msg asycn
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(msg);
+            }
+
+            //check if debug enable
+            if(!Debug.IsDebug){
+                return;
+            }
+
+            //output to console
+            Debug.Message(msg);
+        }
+
+        /// <summary> If debug is enabled, output to console and log warning if enabled.</summary>
+        /// <remarks> Logging occures even if debug is disable. Only <paramref name="log"/> can change that.</remarks>
+        public static void DebugWarning(string msg, bool log = true){
+            if(log){
+                //log msg asycn
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(msg);
+            }
+
+            //check if debug enable
+            if(!Debug.IsDebug){
+                return;
+            }
+
+            //output to console
+            Debug.Warning(msg);
+        }
+
+        /// <summary> If debug is enabled, output to console and log error if enabled.</summary>
+        /// <remarks> Logging occures even if debug is disable. Only <paramref name="log"/> can change that.</remarks>
+        public static void DebugError(string msg, bool log = true){
+            if(log){
+                //log msg asycn
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(msg);
+            }
+
+            //check if debug enable
+            if(!Debug.IsDebug){
+                return;
+            }
+
+            //output to console
+            Debug.Error(msg);
+        }
+
+        /// <summary> If debug is enabled, output to console and log the success if enabled.</summary>
+        /// <remarks> Logging occures even if debug is disable. Only <paramref name="log"/> can change that.</remarks>
+        public static void DebugSuccess(string msg, bool log = true){
+            if(log){
+                //log msg asycn
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(msg);
+            }
+
+            //check if debug enable
+            if(!Debug.IsDebug){
+                return;
+            }
+
+            //output to console
+            Debug.Success(msg);
         }
     }
 }
