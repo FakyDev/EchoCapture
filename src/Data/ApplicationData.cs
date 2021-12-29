@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using EchoCapture.Data.File;
+using EchoCapture.Data.File.Text;
 using EchoCapture.Exceptions.Data;
 
 namespace EchoCapture.Data{
@@ -22,6 +23,35 @@ namespace EchoCapture.Data{
             }
         }
 
+
+        /// <summary> Hold the instance of the application log file.</summary>
+        private static LogFile logFile = null;
+
+        /// <summary> The date and time when had gotten the instance of the log file.</summary>
+        private static DateTime? fileAcquiredDate = null;
+
+        /// <summary> (Get only) Return log file for the current day.</summary>
+        private static LogFile CurrentLogFile{
+            get{
+                //update if isn't updated
+                //update if day doesn't match
+                if(ApplicationData.logFile == null || (DateTime.Now.Day != ApplicationData.fileAcquiredDate.Value.Day)){
+                    //update file log
+                    ApplicationData.UpdateLogFile();
+                }
+
+                //return file instance
+                return ApplicationData.logFile;
+            }
+        }
+
+        /// <summary> The format for log file name.</summary>
+        private const string logFileFormat = "MM-dd-yyyy";
+
+        /// <summary> The date format for beginning of a line in log file.</summary>
+        private const string lineDateFormat = "[MM/dd/yyyy HH:mm:ss]";
+
+
         /// <summary> (Get only) Return path to the data folder.</summary>
         internal static string DataFolder{
             get{
@@ -35,13 +65,20 @@ namespace EchoCapture.Data{
             }
         }
 
+        /// <summary> (Get only) Return path to the log folder.</summary>
+        internal static string LogFolder{
+            get{
+                return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "logs";
+            }
+        }
+
         /// <summary> (Get only) Return path to the application folder.</summary>
         internal static string AppLocation{
             get{
                 return System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
             }
         }
-
+        
 
         /// <inheritdoc cref="EchoCapture.Data.ApplicationData.ValidateDataFile"/>
         /// <summary> Initialise the application data manager.</summary>
@@ -53,6 +90,8 @@ namespace EchoCapture.Data{
 
             //validate application data file
             ApplicationData.ValidateDataFile();
+            //update log file
+            ApplicationData.UpdateLogFile();
 
             //update value
             ApplicationData.hasInitialise = true;
@@ -169,6 +208,7 @@ namespace EchoCapture.Data{
                     ApplicationData.dataFile.OverwriteFile(fs, content);
 
                     //notify user that data folder is created
+                    System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"New data config was created at \"{ApplicationData.DataFolder}\".");
                     //if debug is on
                     if(Debug.IsDebug){
                         Console.WriteLine($"New data config was created at \"{ApplicationData.DataFolder}\".");
@@ -188,6 +228,9 @@ namespace EchoCapture.Data{
                         //send error to user that data folder was created and default value was restored.
                         Debug.Error("Data config was found to be corrupted. It has been fixed and default values have been restored. Please reconfigure your settings.");
                         Debug.SkipLine();
+
+                        //log msg
+                        System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog("Data config was found to be corrupted. It has been fixed and default values have been restored. Please reconfigure your settings.");
                     }
                 } else {
                     //throw exception
@@ -199,6 +242,42 @@ namespace EchoCapture.Data{
                     fs.Dispose();
                 }
             }
+        }
+
+
+        /// <summary> Update the log with <paramref name="text"/>.</summary>
+        public static async System.Threading.Tasks.Task UpdateLog(string text){
+            //get current log file
+            LogFile file = ApplicationData.CurrentLogFile;
+
+            //update text
+            text = $"{DateTime.Now.ToString(ApplicationData.lineDateFormat)} {text}\n";
+
+            //update log
+            await file.AddUpFileAsync(text);
+        }
+
+        /// <summary> Get log file, for the current date.</summary>
+        private static void UpdateLogFile(){
+            //get date time struct
+            DateTime acquiredDate = DateTime.Now;
+            //get the log file name
+            string fileName = acquiredDate.ToString(ApplicationData.logFileFormat);
+
+            //create instance
+            LogFile file = new LogFile(fileName, ApplicationData.LogFolder);
+
+            //check if exists
+            if(!file.FileExists){
+                //if failed to create
+                if(!file.CreateFile()){
+                    Debug.DebugError($"Failed to create log file for {fileName}.");
+                }
+            }
+
+            //update reference
+            ApplicationData.fileAcquiredDate = acquiredDate;
+            ApplicationData.logFile = file;
         }
 
         /// <summary> Object used to determine application data contents format.</summary>
