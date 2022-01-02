@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using EchoCapture.Exceptions;
 using EchoCapture.Data;
+using EchoCapture.Data.File;
 
 namespace EchoCapture.Command{
 
@@ -15,6 +16,9 @@ namespace EchoCapture.Command{
 
         /// <summary> The argument one value, for updating the time-interval.</summary>
         private const string INTERVAL = "interval";
+
+        /// <summary> The argument one value, for updating the image format.</summary>
+        private const string IMAGE_FORMAT = "format";
 
         /// <summary> The argument one value, for displaying settings.</summary>
         private const string DISPLAY = "show";
@@ -30,8 +34,8 @@ namespace EchoCapture.Command{
                 Dictionary<int, CommandArg> dictionary = new Dictionary<int, CommandArg>();
 
                 //add to dictionary
-                dictionary.Add(0, new CommandArg("action", 1, "The operation to perform. \"" + SettingCommand.FOLDER + "\" or \"" + SettingCommand.INTERVAL + "\" for updating data, and \"" + SettingCommand.DISPLAY + "\" for displaying settings.", typeof(string)));
-                dictionary.Add(1, new CommandArg("data", 2, "The new data for the setting, based on argument 1. *" + SettingCommand.FOLDER + ": the new path to folder where screenshots will be saved. *" + SettingCommand.INTERVAL + ": the amount of miliseconds to wait between screenshots.", new Type[2]{typeof(string), typeof(int)}));
+                dictionary.Add(0, new CommandArg("action", 1, $"The operation to perform. \"{SettingCommand.FOLDER}\", \"{SettingCommand.INTERVAL}\" or \"{SettingCommand.IMAGE_FORMAT}\" for updating data, and \"{SettingCommand.DISPLAY}\" for displaying settings.", typeof(string)));
+                dictionary.Add(1, new CommandArg("data", 2, $"The new data for the setting based on argument 1. *{SettingCommand.FOLDER}: the new path to folder where capture screen will be saved. *{SettingCommand.INTERVAL}: the amount of miliseconds to wait between capture screen. *{SettingCommand.IMAGE_FORMAT}: the image format of capture screen.", new Type[2]{typeof(string), typeof(int)}));
 
                 //return
                 return dictionary;
@@ -51,16 +55,22 @@ namespace EchoCapture.Command{
             try{
                 this.ValidateArguments(args, 1);
             } catch (InsufficientLineArgumentException e){
-                //exception for folder
-                if(args[0] == SettingCommand.FOLDER) {
-                    throw new InsufficientLineArgumentException("The new path to folder, is not specified.");
+                switch(args[0]){
+                    //exception for folder
+                    case SettingCommand.FOLDER:
+                        throw new InsufficientLineArgumentException("The new path to folder, is not specified.");
 
-                //exception for time interval
-                } else if(args[0] == SettingCommand.INTERVAL) {
-                    throw new InsufficientLineArgumentException("The new time interval, is not specified.");
-                } else if(args[0] != SettingCommand.DISPLAY){
+                    //exception for time interval
+                    case SettingCommand.INTERVAL:
+                        throw new InsufficientLineArgumentException("The new time interval, is not specified.");
+
+                    //exception for folder
+                    case SettingCommand.IMAGE_FORMAT:
+                        throw new InsufficientLineArgumentException("The new image format, is not specified.");
+
                     //rethrow
-                    throw e;
+                    case SettingCommand.DISPLAY:
+                        throw e;
                 }
             }
 
@@ -96,8 +106,6 @@ namespace EchoCapture.Command{
 
                 //inform user
                 Debug.Success("Folder path has been updated.");
-                //update log
-                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Folder path has been updated to \"{args[1]}\".");
                 return;
             } 
             
@@ -121,8 +129,26 @@ namespace EchoCapture.Command{
 
                 //inform user
                 Debug.Success($"Time interval has been set to {parsedValue}ms.");
-                //update log
-                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Time interval has been set to {parsedValue}ms.");
+                return;
+            }
+
+            if(action == SettingCommand.IMAGE_FORMAT){
+                //performing
+                if(SettingCommand.taskCommand.IsPerforming){
+                    //notice user
+                    Debug.Error("Cannot update image format while performing task.");
+                    //update log
+                    System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog("Cannot update image format while performing task.");
+
+                    return;
+                }
+
+                //update interval
+                this.UpdateImageFormat(args[1]);
+
+                //inform user
+                Debug.Success($"Image format has been set to '{args[1]}'.");
+
                 return;
             }
 
@@ -138,12 +164,13 @@ namespace EchoCapture.Command{
             //will hold the value
             string folderPath;
             int? interval;
+            FileExtension? imageExtension;
 
             //get data
-            ApplicationData.GetFileData(out folderPath, out interval);
+            ApplicationData.GetAllFileData(out folderPath, out interval, out imageExtension);
             
             //send to user
-            Debug.Message($"folder path: {folderPath}\ntime-interval: {interval}");
+            Debug.Message($"folder path: {folderPath}\ntime-interval: {interval}\nimage format: {imageExtension}");
         }
 
         /// <summary> Update the folder path, along with validating the path.</summary>
@@ -203,6 +230,41 @@ namespace EchoCapture.Command{
 
             //update data file
             ApplicationData.UpdateFileData(new UpdateData(parsedValue));
+        }
+
+        /// <summary> Update the image extension.</summary>
+        /// <remarks> No exception if successful.</remarks>
+        /// <param name="imageExtension"> The non-parsed string value, which will be parsed to FileExtension.</param>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
+        private void UpdateImageFormat(string imageExtension){
+            //reference instance
+            CommandArg arg = this.ArgsList[1];
+
+            //the type of arg and value
+            Type valueType = typeof(string);
+
+            //check if not type
+            if(!arg.IsType(valueType)){
+                //throw exception
+                throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[0]);
+            }
+
+            //will hold the parse one
+            FileExtension parsedImageExtension;
+
+            //updat extension
+            if(imageExtension == "png"){
+                parsedImageExtension = FileExtension.png;
+            } else if(imageExtension == "jpg"){
+                parsedImageExtension = FileExtension.jpg;
+            } else {
+                throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[0], "Image format can only be 'png' or 'jpg'.");
+            }
+
+            //update
+            ApplicationData.UpdateFileData(new UpdateData(parsedImageExtension));
         }
 
 
