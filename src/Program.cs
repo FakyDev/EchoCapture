@@ -71,6 +71,7 @@ namespace EchoCapture{
             
             //intialise application
             Program.Initialise();
+
             //perform operation
             if(Program.DebugState){
                 Program.PerformDebug(Networkable.LocalIp, Int32.Parse(args[1]));
@@ -81,6 +82,10 @@ namespace EchoCapture{
 
         /// <summary> Initialise the application.</summary>
         private static void Initialise(){
+            //add event
+            AppDomain.CurrentDomain.ProcessExit += new EventHandler(Program.OnExit);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(Program.OnExit);
+
             //for capture debug mode
             if(Program.currentState == ApplicationState.Debug){
                 //disable input
@@ -90,10 +95,6 @@ namespace EchoCapture{
                 System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog("Debugger application has started.");
                 return;
             }
-
-            //add event
-            AppDomain.CurrentDomain.ProcessExit += new EventHandler(Program.OnExit);
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(Program.OnExit);
 
             //display message
             string msg = $"{Program.ApplicationName} v{Program.ApplicationVersion}, for capturing your screen at a time-interval.\n" +
@@ -284,7 +285,7 @@ namespace EchoCapture{
             process.StartInfo.UseShellExecute = true;
 
             //add event which will be call inside default when debug is killed
-            process.Exited += new EventHandler(Program.OnDebugExit);
+            process.Exited += Program.OnDebugExit;
 
             //update reference
             Program.debugProcess = process;
@@ -310,20 +311,37 @@ namespace EchoCapture{
             }
         }
 
+
         /// <summary> Called when application is exited, in both state.</summary>
-        private static void OnExit(object sender, EventArgs e){
-            //log
-            System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog(Program.DebugState ? "Debugger application has exited." : "Default application has exited.");
+        private static async void OnExit(object sender, EventArgs e){
+            //will hold the task
+            System.Threading.Tasks.Task updateLog;
 
-            //kill process
-            if(Program.DebugProcess != null){
-                Program.DebugProcess.Kill();
+            if(Program.DebugState){
+                //stop listening
+                try{
+                    Program.server.StopListening();
+                } catch (InvalidOperationException){}
+
+                //log
+                updateLog = ApplicationData.UpdateLog("Debugger application has exited.");
+            } else {
+                //log
+                updateLog = ApplicationData.UpdateLog("Default application has exited.");
+
+                //ask process to stop
+                try{
+                    Program.TaskCommand.OnSendEvent(new string[1]{"stop"});
+                } catch (InvalidOperationException){}
+
+                //kill process
+                if(Program.DebugProcess != null){
+                    Program.debugProcess.Kill();
+                }
             }
 
-            //disable send and request and dispose
-            if(Program.server != null){
-                Program.server.StopListening();
-            }
+            //wait for log saved
+            await updateLog;
         }
         
         /// <summary> Called in default state when application in debug state is exited.</summary>
