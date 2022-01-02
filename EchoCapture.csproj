@@ -7,8 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-    <!--<PackageReference Include="System.Windows.Forms" version="4.0.0.0" />-->
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms"/>
   </ItemGroup>
 
 </Project>
