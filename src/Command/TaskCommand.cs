@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 using EchoCapture.Data;
 using EchoCapture.Data.File;
+using EchoCapture.Data.File.Image;
 using EchoCapture.Exceptions;
 using EchoCapture.Exceptions.Data;
 using EchoCapture.Networking;
@@ -133,12 +134,14 @@ namespace EchoCapture.Command{
         private void StartWork(out int? delay){
             //default values
             delay = null;
+            FileExtension? imageExtension = null;
 
             //check if already running
             if(!this.isRunning){
                 //try get data
                 try{
                     ApplicationData.GetFileData(out delay);
+                    ApplicationData.GetFileData(out imageExtension);
                 } catch (ReadingDataFileException){
                     //throw new exception
                     throw new ReadingDataFileException("Failed to start the operation of capturing screen.");
@@ -156,7 +159,7 @@ namespace EchoCapture.Command{
                 //update token source
                 this.cancelTokenSource = new CancellationTokenSource();
                 //start work
-                this.work = this.ExecuteWork(this.cancelTokenSource.Token, (int)delay);
+                this.work = this.ExecuteWork(this.cancelTokenSource.Token, (int)delay, (FileExtension)imageExtension);
 
                 return;
             }
@@ -202,7 +205,8 @@ namespace EchoCapture.Command{
         /// <summary> Loops each <paramref name="delay"/> (ms) asynchronously, and capture the screen.</summary>
         /// <param name="token"> The cancellation token which allows to stop the work.</param>
         /// <param name="delay"> The amount of miliseconds to wait between work.</param>
-        private async Task ExecuteWork(CancellationToken token, int delay){
+        /// <param name="imageExtension"> The extension of the capture screen, to use.</param>
+        private async Task ExecuteWork(CancellationToken token, int delay, FileExtension imageExtension){
             //were we already canceled?
             token.ThrowIfCancellationRequested();
 
@@ -224,12 +228,12 @@ namespace EchoCapture.Command{
                 }
 
                 //screenshot and save
-                await TaskCommand.ScreenshotAndSave();
+                await TaskCommand.ScreenshotAndSave(imageExtension);
             }
         }
 
         /// <summary> Screenshot the display and save it, asynchronously.</summary>
-        private async static Task ScreenshotAndSave(){
+        private async static Task ScreenshotAndSave(FileExtension imageExtension){
             //get the date and time of screenshot
             DateTime screenshotDateTime = DateTime.Now;
 
@@ -237,8 +241,15 @@ namespace EchoCapture.Command{
             string date = screenshotDateTime.ToString(TaskCommand.FILENAME_FORMAT);
             string debugDate = screenshotDateTime.ToString(TaskCommand.DEBUG_FORMAT);
 
+            //will hold the instance
+            ImageFile file = null;
+
             //create instance
-            PngFile file = new PngFile(date, ApplicationData.DataFolder);
+            if(imageExtension == FileExtension.png){
+                file = new PngFile(date, ApplicationData.DataFolder);
+            } else if(imageExtension == FileExtension.jpg){
+                file = new JpgFile(date, ApplicationData.DataFolder);
+            }
 
             //will hold the stream
             if(!file.FileExists){
@@ -351,58 +362,3 @@ namespace EchoCapture.Command{
         }
     }
 }
-
-/*
-//will hold the stream
-if(!file.FileExists){
-    //will hold the file stream
-    System.IO.FileStream fs;
-
-    //screenshot
-    using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
-        //create file
-        if(file.CreateFile(out fs)){
-            //save screenshot
-            file.OverwriteFile(fs, bmp);
-            //free resource
-            fs.Dispose();
-
-            //for debug
-            if(Debug.IsDebug){
-                //create file name
-                string fileName = $"{date}.{file.Extension}";
-                //convert to debug string
-                Debug.Dump(fileName, out fileName);
-
-                //send to console
-                Debug.Success($"Created file and saved the capture screen.\n\t{fileName}");
-            }
-        } else {
-            //for debug
-            if(Debug.IsDebug){
-                //create file name
-                string fileName = $"{date}.{file.Extension}";
-                //convert to debug string
-                Debug.Dump(fileName, out fileName);
-
-                //send to console
-                Debug.Error($"Failed to create file.\n\t{fileName}");
-            }
-        }
-    }
-} else {
-    //screenshot
-    PngFile.Screenshot(file);
-
-    //for debug
-    if(Debug.IsDebug){
-        //create file name
-        string fileName = $"{date}.{file.Extension}";
-        //convert to debug string
-        Debug.Dump(fileName, out fileName);
-
-        //send to console
-        Debug.Success($"Saved the capture screen.\n\t{fileName}");
-    }
-}
-*/
