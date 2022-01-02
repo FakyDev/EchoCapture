@@ -19,7 +19,7 @@ namespace EchoCapture.Data{
         /// <summary> (Get only) Return setting with default values.</summary>
         private static Setting DefaultConfig{
             get{
-                return new Setting(ApplicationData.DataFolder, 10000);
+                return new Setting(ApplicationData.DataFolder, 10000, FileExtension.png);
             }
         }
 
@@ -115,9 +115,21 @@ namespace EchoCapture.Data{
             //update data
             if(data.UpdateType == UpdateData.DataType.path){
                 updatedContent.SavedPath = data.Path;
+
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Storage location has been updated to \"{data.Path}\" in the application data folder.");
             }
             if(data.UpdateType == UpdateData.DataType.timeout){
                 updatedContent.TimeoutMS = data.Timeout;
+
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Time-interval has been updated to {data.Timeout}ms in the application data folder.");
+            }
+            if(data.UpdateType == UpdateData.DataType.imageFileExtension){
+                updatedContent.SetImageExtension((FileExtension)data.ImageExtension);
+
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Image format has been updated to {data.ImageExtension.ToString().ToUpper()} in the application data folder.");
             }
 
             //update variable
@@ -165,14 +177,33 @@ namespace EchoCapture.Data{
             interval = content[0].TimeoutMS;
         }
 
-        /// <summary> Retrieve the folder path and time interval value from the data file.</summary>
+        /// <summary> Retrieve the image extension from the data file.</summary>
+        /// <param name="interval"> Will hold the time interval value.</param>
+        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
+        public static void GetFileData(out FileExtension? imageExtension){
+            //default value
+            imageExtension = null;
+
+            //will hold the data of the file
+            List<Setting> content;
+            //try to read file
+            if(!ApplicationData.dataFile.ReadFile(out content)){
+                throw new ReadingDataFileException();
+            }
+
+            //update data
+            imageExtension = content[0].GetImageExtension();
+        }
+
+        /// <summary> Retrieve all the data from application data file.</summary>
         /// <param name="path"> Will hold the retrieved path.</param>
         /// <param name="interval"> Will hold the time interval value.</param>
         /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
-        public static void GetFileData(out string path, out int? interval){
+        public static void GetAllFileData(out string path, out int? interval, out FileExtension? imageExtension){
             //default value
             path = null;
             interval = null;
+            imageExtension = null;
 
             //will hold the data of the file
             List<Setting> content;
@@ -184,6 +215,7 @@ namespace EchoCapture.Data{
             //update data
             path = content[0].SavedPath;
             interval = content[0].TimeoutMS;
+            imageExtension = content[0].GetImageExtension();
         }
         
         /// <summary> Validate the file(s) holding data for the application.</summary>
@@ -282,17 +314,23 @@ namespace EchoCapture.Data{
 
         /// <summary> Object used to determine application data contents format.</summary>
         private struct Setting{
+
             /// <summary> Hold the value of the path.</summary>
             private string savedPath;
+
             /// <summary> Hold the value of the time interval.</summary>
             private int? timeoutMS;
 
-            public Setting(string savedPath, int? timeoutMS){
+            /// <summary> Hold the file extension of the capture screen.</summary>
+            private FileExtension? imageExtension;
+
+            public Setting(string savedPath, int? timeoutMS, FileExtension imageExtension){
                 this.savedPath = savedPath;
                 this.timeoutMS = timeoutMS;
+                this.imageExtension = imageExtension;
             }
 
-            /// <summary> The value of the path.</summary>
+            /// <summary> The path where capture screen will be saved.</summary>
             public string SavedPath{
                 get{
                     return this.savedPath;
@@ -301,8 +339,8 @@ namespace EchoCapture.Data{
                     this.savedPath = value;
                 }
             }
-            
-            /// <summary> The value of the time interval in ms.</summary>
+
+            /// <summary> The time-interval between screenshots in miliseconds.</summary>
             public int? TimeoutMS{
                 get{
                     return this.timeoutMS;
@@ -312,10 +350,42 @@ namespace EchoCapture.Data{
                 }
             }
 
+            /// <summary> (Get and partially set) The image file extension using. It also defines the image format.</summary>
+            public string ImageExtension{
+                get{
+                    return this.imageExtension.ToString().ToLower();
+                }
+                set{
+                    if(value == FileExtension.png.ToString().ToLower()){
+                        this.imageExtension = FileExtension.png;
+                    }
+                    if(value == FileExtension.jpg.ToString().ToLower()){
+                        this.imageExtension = FileExtension.jpg;
+                    }
+                }
+            }
+
+            /// <summary> Update the image file extension.</summary>
+            /// <exception cref="System.ArgumentException"> Thrown when file extension is invalid.</exception>
+            public void SetImageExtension(FileExtension imageExtension){
+                //check if invalid
+                if(imageExtension != FileExtension.png && imageExtension != FileExtension.jpg){
+                    throw new ArgumentException("File extension passed is invalid.");
+                }
+
+                //update
+                this.imageExtension = imageExtension;
+            }
+
+            /// <summary> Return the image file extension.</summary>
+            public FileExtension? GetImageExtension(){
+                return this.imageExtension;
+            }
+
             /// <summary> Check if the instance, is corrupted.</summary>
             public static bool IsCorrupted(Setting instance){
                 //check if one is null
-                if(instance.savedPath == null || instance.timeoutMS == null){
+                if(instance.savedPath == null || instance.timeoutMS == null || instance.imageExtension == null){
                     return true;
                 }
 
