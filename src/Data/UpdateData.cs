@@ -1,3 +1,5 @@
+using EchoCapture.Data.File;
+
 namespace EchoCapture.Data{
     
     /// <summary> Struct used for updating data in application data file.</summary>
@@ -11,6 +13,9 @@ namespace EchoCapture.Data{
 
         /// <summary> Will hold the timeout values.</summary>
         private int? timeout;
+
+        /// <summary> Will hold the file extension of the capture screen.</summary>
+        private FileExtension? imageExtension;
 
         /// <summary> (Get only) Return the update type.</summary>
         public DataType UpdateType{
@@ -35,6 +40,12 @@ namespace EchoCapture.Data{
             }
         }
 
+        /// <summary> (Get only) Return the new image extension.</summary>
+        public FileExtension? ImageExtension{
+            get{
+                return this.imageExtension;
+            }
+        }
 
         /// <summary> For updating path, in data file.</summary>
         /// <param name="newPath"> The new path.</param>
@@ -42,25 +53,38 @@ namespace EchoCapture.Data{
             this.updateType = DataType.path;
             this.path = newPath;
             this.timeout = null;
+            this.imageExtension = null;
         }
 
         /// <summary> For updating timeout, in data file.</summary>
-        /// <param name="newPath"> The new value.</param>
+        /// <param name="newTimeout"> The new value.</param>
         public UpdateData(int newTimeout){
             this.updateType = DataType.timeout;
             this.timeout = newTimeout;
             this.path = null;
+            this.imageExtension = null;
         }
 
+        /// <summary> For updating image file extension, in data file.</summary>
+        /// <param name="newExtension"> The new image file extension.</param>
+        public UpdateData(FileExtension newExtension){
+            this.updateType = DataType.imageFileExtension;
+            this.imageExtension = newExtension;
+            this.path = null;
+            this.timeout = null;
+        }
 
         /// <summary> Define the update of application data file.</summary>
         public enum DataType{
 
             /// <summary> Updates the path of the directory to save screenshots.</summary>
-            path,
+            path = 0,
 
             /// <summary> Updates the time interval between screenshots.</summary>
-            timeout
+            timeout,
+
+            /// <summary> Updates the image file extension.</summary>
+            imageFileExtension
         }
     }
 }
