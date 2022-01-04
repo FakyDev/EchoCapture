@@ -171,6 +171,12 @@ namespace EchoCapture.Command{
                 }
 
                 return;
+            } else {
+                //passed non-existing arg
+                if(args.Length > this.ArgsList.Count){
+                    //throw exception
+                    throw new UnknownLineArgumentException(this);
+                }
             }
             
             //passed non-existing arg or missing argument
@@ -226,7 +232,7 @@ namespace EchoCapture.Command{
             }
         }
 
-        /// <summary> Verify if arguments sent, is valid. This overload requires args length of at least <paramref name="minArg"/> to start validating argument.</summary>
+        /// <summary> Verify if arguments sent is valid and requires to have a minimum amount of arg of <paramref name="minArg"/> to start validating argument.</summary>
         /// <param name="args"> Array of string passed as arguments.</param>
         /// <param name="minArg"> The minimum amount of args require to start validating.</param>
         /// <exception cref="EchoCapture.Exceptions.UnknownLineArgumentException"></exception>
@@ -247,6 +253,106 @@ namespace EchoCapture.Command{
                 }
 
                 return;
+            } else {
+                //passed non-existing arg
+                if(args.Length > this.ArgsList.Count){
+                    //throw exception
+                    throw new UnknownLineArgumentException(this);
+                }
+            }
+            
+            //passed non-existing arg or missing argument
+            if(args.Length != this.ArgsList.Count){
+                //throw exception
+                throw new InsufficientLineArgumentException(this);
+            }
+
+            //loop through arg list
+            foreach(KeyValuePair<int, CommandArg> item in this.ArgsList){
+                //get type
+                Type[] argTypes = item.Value.ArgType;
+                //get arg
+                CommandArg arg = item.Value;
+                //will hold the index
+                int? index = null;
+                
+                //determine if at least parsed one value
+                bool parsed = false;
+                //the exception catched
+                InvalidLineArgumentException except = null;
+                try{
+                    for (int i = 0; i < argTypes.Length; i++){
+                        //update
+                        index = i;
+                        //get value
+                        if(argTypes[i] == typeof(bool)){
+                            bool argValue;
+                            arg.Parse(args[item.Key], out argValue);
+                            parsed = true;
+                        } else if(argTypes[i] == typeof(int)){
+                            int argValue;
+                            arg.Parse(args[item.Key], out argValue);
+                            parsed = true;
+                        } else if(argTypes[i] == typeof(string)){
+                            string argValue;
+                            argValue = args[item.Key];
+                            parsed = true;
+                        }
+                    }
+                } catch(InvalidOperationException){
+                    //throw exception
+                    throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[(int)index]);
+                } catch(InvalidLineArgumentException e){
+                    //update
+                    except = e;
+                }
+
+                if(!parsed){
+                    //throw exception
+                    throw except;
+                }
+            }
+        }
+
+        /// <summary> Verify if arguments sent is valid and requires to have a minimum amount of arg of <paramref name="minArg"/> to start validating argument, and can have
+        /// a maximum amount of argument of <paramref name="maxArg"/>.</summary>
+        /// <param name="args"> Array of string passed as arguments.</param>
+        /// <param name="minArg"> The minimum amount of args require to start validating.</param>
+        /// <exception cref="System.ArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.UnknownLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InvalidLineArgumentException"></exception>
+        /// <exception cref="EchoCapture.Exceptions.InsufficientLineArgumentException"></exception>
+        protected void ValidateArguments(string[] args, int minArg, int maxArg){
+            //stop
+            if(args.Length < minArg){
+                return;
+            }
+
+            //check if param are correct
+            if(minArg > maxArg){
+                throw new ArgumentException("Max argument cannot be less than min argument.");
+            }
+
+            //check if empty
+            if(this.ArgsList == null || this.ArgsList.Count == 0){
+                //passed non-existing arg
+                if(args.Length > 0){
+                    //throw exception
+                    throw new UnknownLineArgumentException(this);
+                }
+
+                return;
+            } else {
+                //passed non-existing arg
+                if(args.Length > this.ArgsList.Count){
+                    //throw exception
+                    throw new UnknownLineArgumentException(this);
+                }
+            }
+
+            //check if above max
+            if(args.Length > maxArg){
+                throw new UnknownLineArgumentException(this, "It applies to the current operation you're trying to accomplish.");
             }
             
             //passed non-existing arg or missing argument
