@@ -51,10 +51,13 @@ namespace EchoCapture.Command{
         /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
         /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
         public override void OnSendEvent(string[] args){
+            //determine if caught exception for display
+            bool excepForDisplay = false;
+
             //validate arguments for at least 1 arguments
             try{
                 this.ValidateArguments(args, 1);
-            } catch (InsufficientLineArgumentException e){
+            } catch (InsufficientLineArgumentException){
                 switch(args[0]){
                     //exception for folder
                     case SettingCommand.FOLDER:
@@ -68,20 +71,22 @@ namespace EchoCapture.Command{
                     case SettingCommand.IMAGE_FORMAT:
                         throw new InsufficientLineArgumentException("The new image format, is not specified.");
 
-                    //rethrow
+                    //exception for display
                     case SettingCommand.DISPLAY:
-                        throw e;
+                        excepForDisplay = true;
+                    break;
+                }
+            } finally {
+                if(args[0] == SettingCommand.DISPLAY){
+                    //contains additional args
+                    if(!excepForDisplay){
+                        throw new UnknownLineArgumentException(this, "It applies for the current operation you're trying to accomplish.");
+                    }
                 }
             }
 
-            //will hold argument one
-            string action;
-            //get first argument
-            try{
-                action = args[0];
-            } catch(IndexOutOfRangeException){
-                throw new InsufficientLineArgumentException(this);
-            }
+            //hold argument one
+            string action = args[0];
 
             //for displaying data
             if(action == SettingCommand.DISPLAY){
@@ -254,12 +259,10 @@ namespace EchoCapture.Command{
             //will hold the parse one
             FileExtension parsedImageExtension;
 
-            //updat extension
-            if(imageExtension == "png"){
-                parsedImageExtension = FileExtension.png;
-            } else if(imageExtension == "jpg"){
-                parsedImageExtension = FileExtension.jpg;
-            } else {
+            //update extension
+            try{
+                parsedImageExtension = (FileExtension)Enum.Parse(typeof(FileExtension), imageExtension);
+            } catch (Exception){
                 throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[0], "Image format can only be 'png' or 'jpg'.");
             }
 
