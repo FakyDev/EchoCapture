@@ -356,12 +356,10 @@ namespace EchoCapture.Data{
                     return this.imageExtension.ToString().ToLower();
                 }
                 set{
-                    if(value == FileExtension.png.ToString().ToLower()){
-                        this.imageExtension = FileExtension.png;
-                    }
-                    if(value == FileExtension.jpg.ToString().ToLower()){
-                        this.imageExtension = FileExtension.jpg;
-                    }
+                    //try to update
+                    try{
+                        this.imageExtension = (FileExtension)Enum.Parse(typeof(FileExtension), value);
+                    } catch (Exception){}
                 }
             }
 
