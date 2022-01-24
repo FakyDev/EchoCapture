@@ -85,6 +85,23 @@ namespace EchoCapture{
             output = "int(" + value + ")";
         }
 
+        /// <summary> Output the float to console.</summary>
+        public static void Dump(this float value){
+            //create line
+            string output = "float(" + value + ")";
+
+            //output as new line
+            Console.WriteLine(output);
+        }
+
+        /// <summary> Update reference with a debugged float.</summary>
+        /// <param name="output"> Reference that will be updated with the debugged string.</param>
+        public static void Dump(float value, out string output){
+            //update
+            output = "int(" + value + ")";
+        }
+
+
         /// <summary> Debug the List and output to console.</summary>
         /// <param name="value"> The LinkedList to debug.</param>
         /// <exception cref="System.ArgumentException"> If T is invalid.</exception>
