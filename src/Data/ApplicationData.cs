@@ -57,11 +57,11 @@ namespace EchoCapture.Data{
             get{
                 //get the path
                 if(Debug.IsDebug){
-                    return System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location) + System.IO.Path.DirectorySeparatorChar + "appData";
+                    return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), "appData");
                 }
 
                 //return
-                return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.ApplicationName);
+                return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.ApplicationName, "appData");
             }
         }
 
@@ -379,6 +379,7 @@ namespace EchoCapture.Data{
             public FileExtension? GetImageExtension(){
                 return this.imageExtension;
             }
+
 
             /// <summary> Check if the instance, is corrupted.</summary>
             public static bool IsCorrupted(Setting instance){
