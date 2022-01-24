@@ -117,17 +117,8 @@ namespace EchoCapture.Data.File.Image{
             //don't exists
             //thus either using alternate jpeg extension
             if(!this.FileExists){
-                //get path
-                string toFixPath  = this.FilePath;
-
-                //check if last char is a directory separator
-                if(!Path.EndsInDirectorySeparator(toFixPath)){
-                    //add directory separator
-                    toFixPath += Path.DirectorySeparatorChar;
-                }
-
-                //add name and extension
-                toFixPath += $"{this.Name}.jpeg";
+                //get path with the alternate jpeg extension
+                string toFixPath = Path.Combine(this.FilePath, $"{this.Name}.jpeg");
 
                 //check if exists
                 if(System.IO.File.Exists(toFixPath)){
@@ -144,7 +135,7 @@ namespace EchoCapture.Data.File.Image{
             Rectangle bounds = Screen.GetBounds(Point.Empty);
 
             //create bitmap, with screen size
-            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height);
+            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppRgb);
 
             //create a graphics object from the bitmap
             using(Graphics captureGraphics = Graphics.FromImage(bmp)){
@@ -154,6 +145,15 @@ namespace EchoCapture.Data.File.Image{
 
             //return
             return bmp;
+        }
+
+        /// <summary> Determine if the extension is an image extension.</summary>
+        public static bool ValidateImageExtension(FileExtension imageExtension){
+            if(imageExtension == FileExtension.jpg || imageExtension == FileExtension.png){
+                return true;
+            }
+
+            return false;
         }
 
         #region Asynchronous file operations
