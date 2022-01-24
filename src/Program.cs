@@ -22,6 +22,13 @@ namespace EchoCapture{
         /// <summary> Hold the current state of the application.</summarY>
         private static ApplicationState? currentState = null;
 
+        /// <summary> (Get only) Return if the application is running and not exiting.</summary>
+        public static bool IsRunning{
+            get{
+                return Program.canRun;
+            }
+        }
+
         /// <summary> (Get only) Determine if the application is in debug state.</summary>
         public static bool DebugState{
             get{
@@ -62,6 +69,13 @@ namespace EchoCapture{
 
 
         public static void Main(string[] args){
+            /* Testing
+            EchoCapture.Data.File.Text.IniFile.IniLine<float> a = new Data.File.Text.IniFile.IniLine<float>("a=100.989032 #sadlsa");
+
+            a.Value.Dump();
+            a.InlineComment.Dump();
+            */
+
             //update state
             if(args.Length == 2 && args[0] == "captureDebug"){
                 Program.currentState = ApplicationState.Debug;
