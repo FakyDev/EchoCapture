@@ -16,6 +16,9 @@ namespace EchoCapture.Data.File{
         txt,
 
         /// <summary> The extension of a text file, which is used to store logs.</summary>
-        log
+        log,
+
+        /// <summary> The extension of a text file, which is used to store config.</summary>
+        ini
     }
 }
