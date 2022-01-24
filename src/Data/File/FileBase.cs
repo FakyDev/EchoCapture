@@ -39,21 +39,7 @@ namespace EchoCapture.Data.File{
         /// <inheritdoc/>
         public string FullPath{
             get{
-                //will hold final path
-                string final;
-
-                //update
-                final  = this.path;
-                if(!Path.EndsInDirectorySeparator(final)){
-                    //add backslash
-                    final += Path.DirectorySeparatorChar;
-                }
-
-                //add final part
-                final += this.Name + "." + (this.extension.ToString().ToLower());
-
-                //return path
-                return final;
+                return Path.Combine(this.path, $"{this.Name}.{this.extension.ToString().ToLower()}");
             }
         }
 
