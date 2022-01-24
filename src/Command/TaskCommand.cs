@@ -108,8 +108,10 @@ namespace EchoCapture.Command{
                 try{
                     this.StopWork();
                 } catch(InvalidOperationException e){
-                    //send error to user
-                    Debug.Error(e.Message);
+                    if(Program.IsRunning){
+                        //send error to user
+                        Debug.Error(e.Message);
+                    }
                     //update log
                     System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog(e.Message);
                     return;
