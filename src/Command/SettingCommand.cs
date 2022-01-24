@@ -266,6 +266,11 @@ namespace EchoCapture.Command{
                 throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[0], "Image format can only be 'png' or 'jpg'.");
             }
 
+            //invalid
+            if(!EchoCapture.Data.File.Image.ImageFile.ValidateImageExtension(parsedImageExtension)){
+                throw new InvalidLineArgumentException(arg.ArgNumber, arg.ArgName, arg.ArgType[0], "Image format can only be 'png' or 'jpg'.");
+            }
+
             //update
             ApplicationData.UpdateFileData(new UpdateData(parsedImageExtension));
         }
