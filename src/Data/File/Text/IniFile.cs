@@ -133,35 +133,106 @@ namespace EchoCapture.Data.File.Text{
         private class ParsedIni{
             
             /// <summary> Determine if the instance is representing a section.</summary>
-            private bool isSection;
+            private bool isSection = false;
 
-            /// <summary> Hold key-value pair, of the data</summary>
-            private Dictionary<string, bool> dataValue = null;
+            /// <summary> Holds the header line.</summary>
+            /// <remarks> Not null only if representing a section.</remarks>
+            private IniLine? headerLine = null;
 
-            //private LinkedList<string, bool> a;
+            /// <summary> Array holding parsed ini line.</summary>
+            /// <remarks> Represent data for current section or global, depends on <see cref="EchoCapture.Data.File.Text.IniFile.ParsedIni.isSection"/></remarks>
+            private List<IniLine> parsedLines = new List<IniLine>();
 
-            /// <summary> Hold sections of the parsed ini.</summary>
-            private ParsedIni[] sections = null;
+            /// <summary> Hold a sections of the ini.</summary>
+            /// <remarks> Not null only if representing global.</remarks>
+            private Dictionary<string, ParsedIni> sections = null;
 
-            private ParsedIni(bool section){
-                this.isSection = section;
-            }
-
-            private ParsedIni(bool section, ParsedIni[] sections) : this(section){
-                if(sections == null){
-                    //to-do: throw exception
+            public ParsedIni(string[] content){
+                //throw exception
+                if(content == null){
+                    throw new ArgumentNullException();
                 }
-                //update
-                this.sections = sections;
+                if(content.Length == 0){
+                    throw new ArgumentException("Array is empty.");
+                }
+                //update field
+                this.sections = new Dictionary<string, ParsedIni>();
+                //do all work
+                this.Initialise(content);
             }
 
-            private ParsedIni(string[] content){
-                
+            private ParsedIni(List<IniLine> parsedLines){
+                //update state
+                this.isSection = true;
+                //do all work for section
+                this.SectionInitialise(parsedLines);
+            }
+
+            private void Initialise(string[] content){
+                //will hold index of header lines
+                List<int> headerIndex = new List<int>();
+                //determine if allowed to update list
+                bool canUpdateList = true;
+
+                //loop through lines
+                for(int i = 0; i < content.Length; i++){
+                    //parse line
+                    IniLine parsedLine = new IniLine(content[i]);
+
+                    //invalid line
+                    if(parsedLine.LineType == IniLineType.Invalid){
+                        //to-do: throw exception
+
+                    //header line type
+                    } else if(parsedLine.LineType == IniLineType.SectionHeader){
+                        //update header index
+                        headerIndex.Add(i);
+                        //disable
+                        canUpdateList = false;
+
+                    } else if(canUpdateList){
+                        //update list
+                        this.parsedLines.Add(parsedLine);
+                    }
+                }
+
+                //looping through headerIndex to create new instance of ParsedIni as subsection
+                for(int i = 0; i < headerIndex.Count; i++){
+                    //get starting index
+                    int startIndex = headerIndex[i];
+                    //get ending index
+                    int endingIndex;
+                    try{
+                        //calculate ending index
+                        endingIndex = headerIndex[i+1]-1;
+                    } catch (IndexOutOfRangeException){
+                        //get last index
+                        endingIndex = content.GetUpperBound(0);
+                    }
+
+                    //copy the section part
+                    List<IniLine> sectionIniLines = this.parsedLines.GetRange(startIndex, endingIndex-startIndex);
+                    //create instance for section
+                    ParsedIni sectionIni = new ParsedIni(sectionIniLines);
+
+                    //update with key, name
+                    this.sections.Add((string)sectionIni.headerLine.Value.Value, sectionIni);
+                }
+            }
+        
+            private void SectionInitialise(List<IniLine> parsedLines){
+                //update header
+                this.headerLine = (IniLine?) parsedLines[0];
+                //remove from list
+                parsedLines.Remove(parsedLines[0]);
+
+                //update list
+                this.parsedLines = parsedLines;
             }
         }
 
         /// <summary> Structure representing a line in an ini file, with parsed value.</summary>
-        public struct IniLine<T>{
+        public struct IniLine{
             
             /// <summary> The full parsed line.</summary>
             private string line;
@@ -176,6 +247,9 @@ namespace EchoCapture.Data.File.Text{
             /// <summary> The key for retrieving the value.</summary>
             private string key;
 
+            /// <summary> Hold the value type.</summary>
+            private Type valueType;
+
             /// <summary> The value retrived.</summary>
             private object value;
 
@@ -183,7 +257,7 @@ namespace EchoCapture.Data.File.Text{
             private IniLineType? lineType;
 
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.line"/>
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.line"/>
             /// <remarks> (Get only)</remarks>
             public string Line{
                 get{
@@ -191,7 +265,7 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.inlineComment"/>
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.inlineComment"/>
             /// <remarks> (Get only)</remarks>
             public string InlineComment{
                 get{
@@ -199,7 +273,7 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.sectionHeader"/>
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.sectionHeader"/>
             /// <remarks> (Get only)</remarks>
             public string SectionHeader{
                 get{
@@ -207,7 +281,7 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.key"/>
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.key"/>
             /// <remarks> (Get only)</remarks>
             public string Key{
                 get{
@@ -215,22 +289,22 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.value"/>
-            /// <remarks> (Get only)</remarks>
-            public T Value{
-                get{
-                    return (T) this.value;
-                }
-            }
-
             /// <summary> (Get only) Return the value type.</summary>
             public Type ValueType{
                 get{
-                    return typeof(T);
+                    return this.valueType;
                 }
             }
 
-            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine{T}.lineType"/>
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.value"/>
+            /// <remarks> (Get only)</remarks>
+            public object Value{
+                get{
+                    return this.value;
+                }
+            }
+
+            /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.lineType"/>
             /// <remarks> (Get only)</remarks>
             public IniLineType LineType{
                 get{
@@ -238,29 +312,92 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
-
-            /// <summary> Create instance from parsing the line.</summary>
-            /// <exception cref="System.InvalidOperationException"> Thrown when type is invalid.</exception>
-            public IniLine(string line){
-                //specify type
-                if(typeof(T) != typeof(int) && typeof(T) != typeof(float) && typeof(T) != typeof(string) && typeof(T) != typeof(bool)){
-                    throw new InvalidOperationException("Invalid T type passed. T can only be int, float, boolean or string");
-                }
-
+            /// <summary> Constructor for nullifying value.</summary>
+            private IniLine(object value = null){
                 //nullify fields
+                this.valueType = null;
                 this.line = null;
                 this.inlineComment = null;
                 this.key = null;
                 this.value = null;
                 this.sectionHeader = null;
                 this.lineType = null;
+            }
 
+            /// <summary> Create instance from parsing the line and estimating the value type.</summary>
+            /// <exception cref="System.ArgumentException"> Thrown when <paramref name="valueType"/> is invalid.</exception>
+            public IniLine(string line) : this(){
+                //hold the value type
+                Type valueType;
+
+                try{
+                    //get type
+                    valueType = IniLine.EstimateType(line);
+                } catch (IniLineDataParsingException){
+                    throw new ArgumentException("Failed to retrieve the value type of the key-value line.");
+                }
+
+                //update type
+                this.valueType = valueType;
+                //parse line
+                this.ParseLine(line);
+            }
+            
+            /// <summary> Create instance from parsing the line and estimating the value type.</summary>
+            /// <remarks> Section Header will be overriden if found section header in the line provided.</remarks>
+            /// <exception cref="System.ArgumentException"> Thrown when <paramref name="valueType"/> is invalid.</exception>
+            public IniLine(string line, string sectionHeader) : this(){
+                //hold the value type
+                Type valueType;
+
+                try{
+                    //get type
+                    valueType = IniLine.EstimateType(line);
+                } catch (IniLineDataParsingException){
+                    throw new ArgumentException("Failed to retrieve the value type of the key-value line.");
+                }
+
+                //update type
+                this.valueType = valueType;
+                //update header
+                this.sectionHeader = sectionHeader;
+                //parse line
+                this.ParseLine(line);
+            }
+
+            /// <summary> Create instance from parsing the line, with specified value type.</summary>
+            /// <exception cref="System.ArgumentException"> Thrown when <paramref name="valueType"/> is invalid.</exception>
+            public IniLine(string line, Type valueType) : this(){
+                //specify type
+                if(valueType != typeof(int) && valueType != typeof(float) && valueType != typeof(string) && valueType != typeof(bool)){
+                    throw new ArgumentException("Invalid type passed. Type can only be int, float, boolean or string");
+                }
+
+                //update type
+                this.valueType = valueType;
+                //parse line
+                this.ParseLine(line);
+            }
+
+            /// <summary> Create instance from parsing the line, with specified value type.</summary>
+            /// <remarks> Section Header will be overriden if found section header in the line provided.</remarks>
+            /// <exception cref="System.ArgumentException"> Thrown when <paramref name="valueType"/> is invalid.</exception>
+            public IniLine(string line, string sectionHeader, Type valueType) : this(){
+                //specify type
+                if(valueType != typeof(int) && valueType != typeof(float) && valueType != typeof(string) && valueType != typeof(bool)){
+                    throw new ArgumentException("Invalid type passed. Type can only be int, float, boolean or string");
+                }
+
+                //update type
+                this.valueType = valueType;
+                //update header
+                this.sectionHeader = sectionHeader;
                 //parse line
                 this.ParseLine(line);
             }
 
             /// <summary> Retrieves the information from the line and update the fields.</summary>
-            /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException{T}"> Thrown when failed to parse value.</exception>
+            /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when failed to parse value.</exception>
             private void ParseLine(string line){
                 //update reference
                 this.line = line;
@@ -348,7 +485,7 @@ namespace EchoCapture.Data.File.Text{
                     }
 
                     //get type code
-                    TypeCode tTypeCode = Type.GetTypeCode(typeof(T));
+                    TypeCode tTypeCode = Type.GetTypeCode(this.valueType);
                     //hold the value part and comment part
                     string valuePart = null;
                     string commentPart = null;
@@ -417,11 +554,11 @@ namespace EchoCapture.Data.File.Text{
                             //check if invalid
                             if(valuePart == bool.TrueString || valuePart == bool.FalseString){
                                 //throw exception
-                                throw new IniLineDataParsingException<T>(this, typeof(bool));
+                                throw new IniLineDataParsingException(this, typeof(bool));
                             } else {
                                 if(IniFile.IsNumericRegex.IsMatch(valuePart)){
                                     //throw exception
-                                    throw new IniLineDataParsingException<T>(this, typeof(int));
+                                    throw new IniLineDataParsingException(this, typeof(int));
                                 } else {
                                     //split into two; for float
                                     string[] splittedNumber = valuePart.Split('.', 2);
@@ -429,7 +566,7 @@ namespace EchoCapture.Data.File.Text{
                                     if(splittedNumber.Length == 2){
                                         if(IniFile.IsNumericRegex.IsMatch(splittedNumber[0]) && IniFile.IsNumericRegex.IsMatch(splittedNumber[1])){
                                             //throw exception
-                                            throw new IniLineDataParsingException<T>(this, typeof(float));
+                                            throw new IniLineDataParsingException(this, typeof(float));
                                         }
                                     }
                                 }
@@ -458,7 +595,7 @@ namespace EchoCapture.Data.File.Text{
                                 this.value = (object) false;
                             } else {
                                 //throw exception
-                                throw new IniLineDataParsingException<T>(this);
+                                throw new IniLineDataParsingException(this);
                             }
                         break;
 
@@ -471,7 +608,7 @@ namespace EchoCapture.Data.File.Text{
                                 i_value = Int32.Parse(valuePart);
                             } catch(Exception){
                                 //throw exception
-                                throw new IniLineDataParsingException<T>(this);
+                                throw new IniLineDataParsingException(this);
                             }
 
                             //update value
@@ -487,7 +624,7 @@ namespace EchoCapture.Data.File.Text{
                                 f_value = Single.Parse(valuePart);
                             } catch(Exception){
                                 //throw exception
-                                throw new IniLineDataParsingException<T>(this);
+                                throw new IniLineDataParsingException(this);
                             }
 
                             //update value
@@ -496,24 +633,120 @@ namespace EchoCapture.Data.File.Text{
                     }
                 }
             }
+
+            /// <summary> Estimate the type of the value for a key-value line.</summary>
+            /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when line isn't a key-value line.</exception>
+            private static Type EstimateType(string line){
+                //split into two part; one for key and the other value
+                //and trim whitespace
+                string[] part = line.Split(IniFile.SELECTOR, 2, StringSplitOptions.TrimEntries);
+
+                //check if it's a valid key-value
+                if(part.Length == 2 && !String.IsNullOrEmpty(part[0]) && !String.IsNullOrEmpty(part[1])){
+                    //hold the value part and comment part
+                    string valuePart = null;
+                    string commentPart = null;
+
+                    //check if it's a comment
+                    for(int i = 0; i < IniFile.COMMENT_CHARS.Length; i++){
+                        //hold the index of comment char
+                        int? charIndex = null;
+                        //loop until the char is found or is declare not found
+                        while(true){
+                            try{
+                                //update
+                                charIndex = part[1].IndexOf(IniFile.COMMENT_CHARS[i], (charIndex == null ? 0 : (int)charIndex+1));
+                            } catch (IndexOutOfRangeException){
+                                //nullify
+                                charIndex = null;
+                                break;
+                            }
+
+                            //not found
+                            if(charIndex == -1){
+                                //nullify
+                                charIndex = null;
+                                break;
+                            }
+
+                            //check if esacaped
+                            if(charIndex - 1 > 0 && part[1][(int)charIndex-1] == '\\'){
+                                continue;
+                            }
+
+                            //stop while loop with found char index
+                            break;
+                        }
+
+                        //start other iteration
+                        if(charIndex == null){
+                            continue;
+                        }
+
+                        //check if comment char is first character
+                        if(charIndex == 0){
+                            //update parts
+                            commentPart = part[1];
+                            break;
+                        }
+
+                        //update parts
+                        valuePart = part[1].Substring(0, (int)charIndex-1);
+                        commentPart = part[1].Substring((int)charIndex);
+                        break;
+                    }
+                    
+                    //no value to identify type
+                    if(valuePart == null){
+                        throw new IniLineDataParsingException();
+                    }
+
+                    //boolean type
+                    if(valuePart == bool.TrueString || valuePart == bool.FalseString){
+                        return typeof(bool);
+
+                    //integer type
+                    } else if(IniFile.IsNumericRegex.IsMatch(valuePart)){
+                        return typeof(int);
+
+                    //float or string type
+                    } else {
+                        //split into two; for float
+                        string[] splittedNumber = valuePart.Split('.', 2);
+                        //check if float
+                        if(splittedNumber.Length == 2){
+                            if(IniFile.IsNumericRegex.IsMatch(splittedNumber[0]) && IniFile.IsNumericRegex.IsMatch(splittedNumber[1])){
+                                return typeof(float);
+                            }
+                        }
+
+                        //string type
+                        return typeof(string);
+                    }
+                }
+
+                //line is not a key-value line
+                throw new IniLineDataParsingException();
+            }
         }
 
-        /// <summary> List of constant defining line type based on the line-content.</summary>
-        public enum IniLineType{
-            
-            /// <summary> Defines a line which is has a key and value pair.</summary>
-            /// <remarks> Inline-comment is allowed.</remarks>
-            KeyValue = 0,
+    }
+    
+    /// <summary> List of constant defining line type based on the line-content.</summary>
+    public enum IniLineType{
+        
+        /// <summary> Defines a line which is has a key and value pair.</summary>
+        /// <remarks> Inline-comment is allowed.</remarks>
+        KeyValue = 0,
 
-            /// <summary> Defines a line which creates a section.</summary>
-            /// <remarks> Inline-comment is allowed.</remarks>
-            SectionHeader,
+        /// <summary> Defines a line which creates a section.</summary>
+        /// <remarks> Inline-comment is allowed.</remarks>
+        SectionHeader,
 
-            /// <summary> Defines a fully commented line.</summary>
-            FullyCommented,
+        /// <summary> Defines a fully commented line.</summary>
+        FullyCommented,
 
-            /// <summary> Defines an invalid line.</summary>
-            Invalid
-        }
+        /// <summary> Defines an invalid line.</summary>
+        Invalid
     }
 }
