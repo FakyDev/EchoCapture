@@ -2,9 +2,16 @@ using System;
 using File = EchoCapture.Data.File.Text;
 
 namespace EchoCapture.Exceptions.Data.IniFile{
+    
     /// <summary> Defining failure to pass a value in one of the line(s) of an ini file.</summary>
     public sealed class IniLineDataParsingException : Exception{
         public IniLineDataParsingException(){}
+
+        /// <summary> For construction when searching key value line.</summary>
+        /// <param name="instance"> The instance, containing the type.</param>
+        /// <param name="typeSearchedFor"> The type of the value, which was waiting for.</param>
+        public IniLineDataParsingException(Type typeSearchedFor, File.IniFile.IniLine instance) : base($"Value is type of {instance.ValueType.ToString()} instead of {typeSearchedFor.ToString()}."){}
+
 
         /// <param name="instance"> The instance, containing the type desired.</param>
         public IniLineDataParsingException(File.IniFile.IniLine instance) : base(IniLineDataParsingException.CreateMessage(instance, null)){}
