@@ -69,11 +69,55 @@ namespace EchoCapture{
 
 
         public static void Main(string[] args){
-            /* Testing
-            EchoCapture.Data.File.Text.IniFile.IniLine<float> a = new Data.File.Text.IniFile.IniLine<float>("a=100.989032 #sadlsa");
+            /*
+                string ab = $"lol = asd# ;adsa\ntestMessage = \"before line break\\n \\\"after line break\nmoney = 100.23\nmaoney = 1999 ;hellor\n;a fully commented line with alt char\na = b\nsada = avsd\n[test]\nmoney=100\n#this is a fully commented line\na = \"a asdsa\"";
+                string[] lines = EchoCapture.Data.File.Text.IniFile.SeperateLines(ab);
 
-            a.Value.Dump();
-            a.InlineComment.Dump();
+                EchoCapture.Data.File.Text.IniFile.ParsedIni a = new EchoCapture.Data.File.Text.IniFile.ParsedIni(lines);
+
+                Console.WriteLine(a.ToRawString());
+
+                float value;
+                int val2ue;
+                a.SearchValue<float>("test", "money", out val2ue);
+                val2ue.Dump();
+
+                a.SetValue<float>("test", "money", 100f);
+
+                a.SearchValue<float>("test", "money", out value);
+                value.Dump();
+            */
+
+            /*
+                EchoCapture.Data.File.Text.IniFile.ParsedIni ins = new EchoCapture.Data.File.Text.IniFile.ParsedIni(new string[1]{"money = 100.0#comment"});
+                float value;
+                ins.parsedLines[0].InlineComment.Dump();
+                ins.SearchValue<float>("money", out value);
+                value.Dump();
+                EchoCapture.Data.File.Text.IniFile.IniLine asad = ins.parsedLines[0];
+                asad.ChangeValueType<int>(100);
+                ins.parsedLines[0] = asad;
+                ins.parsedLines[0].ValueType.ToString().Dump();
+                int value2;
+                ins.SearchValue<int>("money", out value2);
+                value2.Dump();
+                //value2.Dump();
+                ins.parsedLines[0].ToString().Dump();
+                ins.parsedLines[0].ToRawString().Dump();
+
+                ins.SetValue<float>("money", 1000f);
+
+                ins.SearchValue<float>("money", out value);
+                value.Dump();
+                ins.parsedLines[0].ToString().Dump();
+                ins.parsedLines[0].ToRawString().Dump();
+            */
+
+            /*
+                EchoCapture.Data.File.Text.IniFile.IniLine a = EchoCapture.Data.File.Text.IniFile.IniLine.CreateKeyValueLine<string>("test", "this \n\tis# a test", "inline comment");
+
+                a.ToRawString().Dump();
+                a.ToString().Dump();
             */
 
             //update state
