@@ -79,7 +79,7 @@ namespace EchoCapture{
 
                 float value;
                 int val2ue;
-                a.SearchValue<float>("test", "money", out val2ue);
+                a.SearchValue<int>("test", "money", out val2ue);
                 val2ue.Dump();
 
                 a.SetValue<float>("test", "money", 100f);
@@ -89,37 +89,32 @@ namespace EchoCapture{
             */
 
             /*
-                EchoCapture.Data.File.Text.IniFile.ParsedIni ins = new EchoCapture.Data.File.Text.IniFile.ParsedIni(new string[1]{"money = 100.0#comment"});
-                float value;
-                ins.parsedLines[0].InlineComment.Dump();
-                ins.SearchValue<float>("money", out value);
-                value.Dump();
-                EchoCapture.Data.File.Text.IniFile.IniLine asad = ins.parsedLines[0];
-                asad.ChangeValueType<int>(100);
-                ins.parsedLines[0] = asad;
-                ins.parsedLines[0].ValueType.ToString().Dump();
-                int value2;
-                ins.SearchValue<int>("money", out value2);
-                value2.Dump();
-                //value2.Dump();
-                ins.parsedLines[0].ToString().Dump();
-                ins.parsedLines[0].ToRawString().Dump();
+            EchoCapture.Data.File.Text.IniFile.ParsedIni ins = new EchoCapture.Data.File.Text.IniFile.ParsedIni(new string[2]{"money = 1.00000655E+14#comment", "[testSection]"});
 
-                ins.SetValue<float>("money", 1000f);
+            ins.SetValueIgnoringType<int>("money", 12302);
+            ins.AddValueAtEnd<string>("newText", "This is a text");
+            ins.AddLineComment("this is a comment", 1);
+            ins.AddLineCommentAtEnd("ending fully commented line");
+            ins.AddLineCommentAtEnd("testSection", "comment in another subsection");
 
-                ins.SearchValue<float>("money", out value);
-                value.Dump();
-                ins.parsedLines[0].ToString().Dump();
-                ins.parsedLines[0].ToRawString().Dump();
-            */
+            ins.RemoveLine(1);
+            ins.RemoveValue("newText");
+            ins.RemoveLine("testSection", 0);
 
-            /*
-                EchoCapture.Data.File.Text.IniFile.IniLine a = EchoCapture.Data.File.Text.IniFile.IniLine.CreateKeyValueLine<string>("test", "this \n\tis# a test", "inline comment");
+            ins.CreateSubsection("notfaizmom", new string[2]{"money = 1.00000655E+14#comment", "krish = \"random text\""}, "a new comment").Dump();
 
-                a.ToRawString().Dump();
-                a.ToString().Dump();
-            */
+            ins.ToRawString().Dump();
 
+            Debug.SkipLine();
+            Debug.SkipLine();
+            ins.ToRawString().Dump();
+
+            EchoCapture.Data.File.Text.IniFile.ParsedIni ab;
+
+            ins.RetrieveSubsection("notfaizmom", out ab);
+
+            ab.ToRawString().Dump(); */
+    
             //update state
             if(args.Length == 2 && args[0] == "captureDebug"){
                 Program.currentState = ApplicationState.Debug;
