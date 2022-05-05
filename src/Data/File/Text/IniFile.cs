@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using EchoCapture.Exceptions.Data.IniFile;
 
@@ -10,9 +9,6 @@ namespace EchoCapture.Data.File.Text{
 
     public class IniFile : TextFile{
 
-        /// <summary> Regex for checking numeric string.</summary>
-        private static readonly Regex IsNumericRegex = new Regex(@"^\d+$");
-        
         /// <summary> The character used to define the value by its key.</summary>
         private const char SELECTOR = '=';
 
@@ -166,12 +162,16 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Private constructor for sections.</summary>
+            /// <remarks> List of ini line, includes the header line which will later be removed.</remarks>
             private ParsedIni(List<IniLine> parsedLines){
                 //update state
                 this.isSection = true;
                 //do all work for section
                 this.SectionInitialise(parsedLines);
             }
+
+            /// <summary> Private default constructor.</summary>
+            private ParsedIni(){}
 
             /// <summary> Initialise the instance for global and create section instances.</summary>
             /// <param name="content"> The ini file content to parse.</param>
@@ -358,8 +358,14 @@ namespace EchoCapture.Data.File.Text{
             /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SearchValue<T>(string subsection, string keyName, out T value){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
                 //invalid key
                 if(String.IsNullOrEmpty(keyName)){
                     throw new ArgumentNullException("keyName", "Key cannot be null.");
@@ -482,8 +488,8 @@ namespace EchoCapture.Data.File.Text{
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="inlineComment"> The new inline comment.</param>
-            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
-            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValue<T>(string keyName, T value, string inlineComment){
@@ -493,6 +499,14 @@ namespace EchoCapture.Data.File.Text{
                 }
                 if(keyName.Split(' ').Length > 1){
                     throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -531,14 +545,21 @@ namespace EchoCapture.Data.File.Text{
             }
             
             /// <summary> Update the value of key, in a subsection.</summary>
+            /// <param name="subsection"> The name of subsection to set value in.</param>
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="removeInlineComment"> Determine if removes the previous inline-comment of the key-value line searched for.</param>
             /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValue<T>(string subsection, string keyName, T value, bool removeInlineComment = false){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
                 //invalid key
                 if(String.IsNullOrEmpty(keyName)){
                     throw new ArgumentNullException("keyName", "Key cannot be null.");
@@ -596,20 +617,35 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Update the value of key, in a subsection.</summary>
+            /// <param name="subsection"> The name of subsection to set value in.</param>
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="inlineComment"> The new inline comment.</param>
-            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
-            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValue<T>(string subsection, string keyName, T value, string inlineComment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
                 //invalid key
                 if(String.IsNullOrEmpty(keyName)){
                     throw new ArgumentNullException("keyName", "Key cannot be null.");
                 }
                 if(keyName.Split(' ').Length > 1){
                     throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -703,8 +739,8 @@ namespace EchoCapture.Data.File.Text{
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="inlineComment"> The new inline comment.</param>
-            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
-            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValueIgnoringType<T>(string keyName, T value, string inlineComment){
@@ -714,6 +750,14 @@ namespace EchoCapture.Data.File.Text{
                 }
                 if(keyName.Split(' ').Length > 1){
                     throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -747,14 +791,21 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Update the value of key, in a subsection, ignoring value type.</summary>
+            /// <param name="subsection"> The name of subsection to set value in.</param>
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="removeInlineComment"> Determine if removes the previous inline-comment of the key-value line searched for.</param>
             /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValueIgnoringType<T>(string subsection, string keyName, T value, bool removeInlineComment = false){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
                 //invalid key
                 if(String.IsNullOrEmpty(keyName)){
                     throw new ArgumentNullException("keyName", "Key cannot be null.");
@@ -799,20 +850,35 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Update the value of key, in a subsection, ignoring value type.</summary>
+            /// <param name="subsection"> The name of subsection to set value in.</param>
             /// <param name="keyName"> The name of the key.</param>
             /// <param name="value"> The new value to be updated with.</param>
             /// <param name="inlineComment"> The new inline comment.</param>
-            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
-            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when value wasn't the expected value.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> Return false when not found.</returns>
             public bool SetValueIgnoringType<T>(string subsection, string keyName, T value, string inlineComment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
                 //invalid key
                 if(String.IsNullOrEmpty(keyName)){
                     throw new ArgumentNullException("keyName", "Key cannot be null.");
                 }
                 if(keyName.Split(' ').Length > 1){
                     throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -850,6 +916,859 @@ namespace EchoCapture.Data.File.Text{
                 return false;
             }
 
+
+            /// <summary> Add a new key-value line with parameters specified, at a specific index.</summary>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="index"> The index where the line will be placed.</param>
+            /// <remarks> This method is used to create new line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <returns> False if key already exists.</returns>
+            public bool AddValue<T>(string keyName, T value, int index){
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value);
+                //insert line
+                this.parsedLines.Insert(index, newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new key-value line, which has a inline-comment, with parameters specified, at a specific index.</summary>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="index"> The index where the line will be placed.</param>
+            /// <param name="inlineComment"> The commented text to add.</param>
+            /// <remarks> This method is used to create new line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
+            /// <returns> False if key already exists.</returns>
+            public bool AddValue<T>(string keyName, T value, int index, string inlineComment){
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value, inlineComment);
+                //insert line
+                this.parsedLines.Insert(index, newLine);
+
+                return true;
+            }
+            
+            /// <summary> Add a new key-value line with parameters specified, in a subsection at a specific index.</summary>
+            /// <param name="subsection"> The name of subsection to add value in.</param>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="index"> The index where the line will be placed.</param>
+            /// <remarks> This method is used to create new line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if key already exists or section does not exists.</returns>
+            public bool AddValue<T>(string subsection, string keyName, T value, int index){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //section don't exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.sections[subsection].parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.sections[subsection].parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value);
+                //insert line
+                this.sections[subsection].parsedLines.Insert(index, newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new key-value line, which has a inline-comment, with parameters specified, in a subsection at a specific index.</summary>
+            /// <param name="subsection"> The name of subsection to add value in.</param>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="index"> The index where the line will be placed.</param>
+            /// <param name="inlineComment"> The commented text to add.</param>
+            /// <remarks> This method is used to create new line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if key already exists or section does not exists.</returns>
+            public bool AddValue<T>(string subsection, string keyName, T value, int index, string inlineComment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //section don't exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.sections[subsection].parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.sections[subsection].parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value, inlineComment);
+                //insert line
+                this.sections[subsection].parsedLines.Insert(index, newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new key-value line with parameters specified, at the end.</summary>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <returns> False if key already exists.</returns>
+            public bool AddValueAtEnd<T>(string keyName, T value){
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value);
+                //add line at end
+                this.parsedLines.Add(newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new key-value line, which has a inline-comment, with parameters specified, at the end.</summary>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="inlineComment"> The commented text to add.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
+            /// <returns> False if key already exists.</returns>
+            public bool AddValueAtEnd<T>(string keyName, T value, string inlineComment){
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value, inlineComment);
+                //add line at end
+                this.parsedLines.Add(newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new key-value line with parameters specified, in a subsection at the end.</summary>
+            /// <param name="subsection"> The name of subsection to add value in.</param>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if key already exists or section does not exists.</returns>
+            public bool AddValueAtEnd<T>(string subsection, string keyName, T value){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //section don't exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.sections[subsection].parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.sections[subsection].parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value);
+                //add line to end
+                this.sections[subsection].parsedLines.Add(newLine);
+
+                return true;
+            }
+            
+            /// <summary> Add a new key-value line, which has a inline-comment, with parameters specified, in a subsection at the end.</summary>
+            /// <param name="subsection"> The name of subsection to add value in.</param>
+            /// <param name="keyName"> The name of the key.</param>
+            /// <param name="value"> The value to be represented.</param>
+            /// <param name="inlineComment"> The commented text to add.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when keyName/inlineComment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if key already exists or section does not exists.</returns>
+            public bool AddValueAtEnd<T>(string subsection, string keyName, T value, string inlineComment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //invalid key
+                if(String.IsNullOrEmpty(keyName)){
+                    throw new ArgumentNullException("keyName", "Key cannot be null.");
+                }
+                if(keyName.Split(' ').Length > 1){
+                    throw new ArgumentException("Key needs to be a word with no whitespace.", "keyName");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
+                }
+
+                //get type
+                Type tType = typeof(T);
+                //check if invalid
+                if(tType != typeof(string) && tType != typeof(bool) && tType != typeof(int) && tType != typeof(float)){
+                    throw new ArgumentException("T is not a valid type reference");
+                }
+
+                //section don't exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //check if key already exists
+                for (int i = 0; i < this.sections[subsection].parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.sections[subsection].parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return false;
+                        }
+                    }
+                }
+
+                //create line
+                IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value, inlineComment);
+                //add line to end
+                this.sections[subsection].parsedLines.Add(newLine);
+
+                return true;
+            }
+
+
+            /// <summary> Add a new fully commented line, with comment specified, at the index specified.</summary>
+            /// <param name="comment"> The string, not including the comment char.</param>
+            /// <param name="index"> The index to add the line comment.</param>
+            /// <remarks> This method is used to create new comment line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
+            public void AddLineComment(string comment, int index, bool useDefaultChar = true){
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+
+                //update comment
+                comment = useDefaultChar ? $"{IniFile.COMMENT}{comment}" : $"{IniFile.ALT_COMMENT}{comment}";
+
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid. Possible cause is contains line break char.", "comment");
+                }
+
+                //create comment line
+                IniLine newLine = IniLine.CreateCommentLine(comment);
+                //add line to the end
+                this.parsedLines.Insert(index, newLine);
+            }
+
+            /// <summary> Add a new fully commented line, with comment specified, in a subsection at the index specified.</summary>
+            /// <param name="comment"> The string, not including the comment char.</param>
+            /// <param name="index"> The index to add the line comment.</param>
+            /// <remarks> This method is used to create new comment line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if subsection doesn't exists.</returns>
+            public bool AddLineComment(string subsection, string comment, int index, bool useDefaultChar = true){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+
+                //update comment
+                comment = useDefaultChar ? $"{IniFile.COMMENT}{comment}" : $"{IniFile.ALT_COMMENT}{comment}";
+
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid. Possible cause is contains line break char.", "comment");
+                }
+
+                //subsection does not exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //create comment line
+                IniLine newLine = IniLine.CreateCommentLine(comment);
+                //add line to the end of the subsection
+                this.sections[subsection].parsedLines.Insert(index, newLine);
+
+                return true;
+            }
+
+            /// <summary> Add a new fully commented line, with comment specified, at the end.</summary>
+            /// <param name="comment"> The string, not including the comment char.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
+            public void AddLineCommentAtEnd(string comment, bool useDefaultChar = true){
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+
+                //update comment
+                comment = useDefaultChar ? $"{IniFile.COMMENT}{comment}" : $"{IniFile.ALT_COMMENT}{comment}";
+
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid. Possible cause is contains line break char.", "comment");
+                }
+
+                //create comment line
+                IniLine newLine = IniLine.CreateCommentLine(comment);
+                //add line to the end
+                this.parsedLines.Add(newLine);
+            }
+
+            /// <summary> Add a new fully commented line, with comment specified, in a subsection at the end.</summary>
+            /// <param name="comment"> The string, not including the comment char.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> False if subsection doesn't exists.</returns>
+            public bool AddLineCommentAtEnd(string subsection, string comment, bool useDefaultChar = true){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+
+                //update comment
+                comment = useDefaultChar ? $"{IniFile.COMMENT}{comment}" : $"{IniFile.ALT_COMMENT}{comment}";
+
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid. Possible cause is contains line break char.", "comment");
+                }
+
+                //subsection does not exists
+                if(!sections.ContainsKey(subsection)){
+                    return false;
+                }
+
+                //create comment line
+                IniLine newLine = IniLine.CreateCommentLine(comment);
+                //add line to the end of the subsection
+                this.sections[subsection].parsedLines.Add(newLine);
+
+                return true;
+            }
+            
+
+            /// <summary> Remove the key-value line, which key matches.</summary>
+            /// <param name="keyName"> Name of the key.</param>
+            public bool RemoveValue(string keyName){
+                //loop through lines
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return this.parsedLines.Remove(line);
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            /// <summary> Remove the key-value line in a subsection, which key matches.</summary>
+            /// <param name="subsection"> Name of the subsection to remove in.</param>
+            /// <param name="keyName"> Name of the key.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when subsection specified is not found.</exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            public bool RemoveValue(string subsection, string keyName){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //check subsection
+                if(!this.sections.ContainsKey(subsection)){
+                    throw new ArgumentException("The subsection specified is not found.", "subsection");
+                }
+
+                //loop through lines
+                for (int i = 0; i < this.sections[subsection].parsedLines.Count; i++){
+                    //get current line
+                    IniLine line = this.sections[subsection].parsedLines[i];
+
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //same name
+                        if(line.Key == keyName){
+                            return this.sections[subsection].parsedLines.Remove(line);
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            /// <summary> Removes line at the specified index.</summary>
+            /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+            public void RemoveLine(int index){
+                this.parsedLines.RemoveAt(index);
+            }
+
+            /// <summary> Removes line at the specified index, in a subsection.</summary>
+            /// <param name="subsection"> The subsection to remove line in.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when subsection specified is not found.</exception>
+            /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            public void RemoveLine(string subsection, int index){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
+                }
+
+                //check subsection
+                if(!this.sections.ContainsKey(subsection)){
+                    throw new ArgumentException("The subsection specified is not found.", "subsection");
+                }
+
+                this.sections[subsection].parsedLines.RemoveAt(index);
+            }
+
+
+            /// <summary> Create and add subsection with header of <paramref name="name"/>, with lines to parse and add to the subsection.</summary>
+            /// <param name="name"> The name of the section header.</param>
+            /// <param name="content"> The array of lines to parse into IniLine.</param>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> True if created section succesfully else failed.</returns>
+            public bool CreateSubsection(string name, string[] content){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot create a new subsection in already define subsection.");
+                }
+
+                //already defined
+                if(this.sections.ContainsKey(name)){
+                    return false;
+                }
+
+                //will hold the subsection instance
+                ParsedIni subsectionIns = new ParsedIni();
+
+                //add header line and update state
+                try{
+                    subsectionIns.headerLine = IniLine.CreateSubsectionHeader(name);
+                } catch (Exception){
+                    //invalid section header
+                    return false;
+                }
+                subsectionIns.isSection = true;
+
+                //loop through lines
+                for(int i = 0; i < content.Length; i++){
+                    //parse line
+                    IniLine parsedLine = new IniLine(content[i]);
+
+                    //invalid line
+                    if(parsedLine.LineType == IniLineType.Invalid){
+                        //to-do: throw exception
+
+                    //header line type
+                    } else if(parsedLine.LineType == IniLineType.SectionHeader){
+                        //to-do: throw exception
+
+                    } else {
+                        //update list
+                        subsectionIns.parsedLines.Add(parsedLine);
+                    }
+                }
+
+                //add section
+                this.sections.Add(name, subsectionIns);
+
+                return true;
+            }
+
+            /// <summary> Create and add subsection with header of <paramref name="name"/>, with lines to parse and add to the subsection.</summary>
+            /// <param name="name"> The name of the section header.</param>
+            /// <param name="content"> The array of lines to parse into IniLine.</param>
+            /// <param name="comment"> The comment to add to the header line.</param>
+            /// <remarks> Comment specified is added to the header line of this creating section.</remarks>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> True if created section succesfully else failed.</returns>
+            public bool CreateSubsection(string name, string[] content, string comment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot create a new subsection in a subsection.");
+                }
+
+                //already defined
+                if(this.sections.ContainsKey(name)){
+                    return false;
+                }
+
+                //will hold the subsection instance
+                ParsedIni subsectionIns = new ParsedIni();
+                
+                //add header line and update state
+                try{
+                    subsectionIns.headerLine = IniLine.CreateSubsectionHeader(name, (IniFile.ALT_COMMENT + comment));
+                } catch (Exception){
+                    //invalid section header
+                    return false;
+                }
+                subsectionIns.isSection = true;
+
+                //loop through lines
+                for(int i = 0; i < content.Length; i++){
+                    //parse line
+                    IniLine parsedLine = new IniLine(content[i]);
+
+                    //invalid line
+                    if(parsedLine.LineType == IniLineType.Invalid){
+                        //to-do: throw exception
+
+                    //header line type
+                    } else if(parsedLine.LineType == IniLineType.SectionHeader){
+                        //to-do: throw exception
+
+                    } else {
+                        //update list
+                        subsectionIns.parsedLines.Add(parsedLine);
+                    }
+                }
+
+                //add section
+                this.sections.Add(name, subsectionIns);
+
+                return true;
+            }
+
+            /// <summary> Create and add subsection with header of <paramref name="name"/>.</summary>
+            /// <param name="name"> The name of the section header.</param>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> True if created section succesfully else failed.</returns>
+            public bool CreateSubsection(string name){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot create a new subsection in a subsection.");
+                }
+
+                //already defined
+                if(this.sections.ContainsKey(name)){
+                    return false;
+                }
+
+                //will hold the subsection instance
+                ParsedIni subsectionIns = new ParsedIni();
+
+                //add header line and update state
+                try{
+                    subsectionIns.headerLine = IniLine.CreateSubsectionHeader(name);
+                } catch (Exception){
+                    //invalid section header
+                    return false;
+                }
+                subsectionIns.isSection = true;
+
+                //add section
+                this.sections.Add(name, subsectionIns);
+
+                return true;
+            }
+
+            /// <summary> Create and add subsection with header of <paramref name="name"/>.</summary>
+            /// <param name="name"> The name of the section header.</param>
+            /// <param name="comment"> The comment to add to the header line.</param>
+            /// <remarks> Comment specified is added to the header line of this creating section.</remarks>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <returns> True if created section succesfully else failed.</returns>
+            public bool CreateSubsection(string name, string comment){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot create a new subsection in a subsection.");
+                }
+
+                //already defined
+                if(this.sections.ContainsKey(name)){
+                    return false;
+                }
+
+                //will hold the subsection instance
+                ParsedIni subsectionIns = new ParsedIni();
+
+                //add header line and update state
+                try{
+                    subsectionIns.headerLine = IniLine.CreateSubsectionHeader(name, (IniFile.ALT_COMMENT + comment));
+                } catch (Exception){
+                    //invalid section header
+                    return false;
+                }
+                subsectionIns.isSection = true;
+
+                //add section
+                this.sections.Add(name, subsectionIns);
+
+                return true;
+            }
+
+            /// <summary> Remove the subsection from the lines.</summary>
+            /// <param name="name"> The name of the sub-section header.</param>
+            /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            public bool RemoveSubsection(string name){
+                //subsection
+                if(this.isSection){
+                    throw new InvalidOperationException("Cannot remove a subsection in a subsection.");
+                }
+
+                return this.sections.Remove(name);
+            }
+            
+            //to-do: maybe remove
+            /// <summary> Try to get the subsection and passed it as reference.</summary>
+            /// <param name="name"> The name of the subsection header.</param>
+            /// <returns> True if found.</returns>
+            public bool RetrieveSubsection(string name, out ParsedIni subsection){
+                return this.sections.TryGetValue(name, out subsection);
+            }
+
+
             /// <summary> Return a section represented by reconstructed line(s).</summary>
             public override string ToString(){
                 //hold the full output line
@@ -861,18 +1780,18 @@ namespace EchoCapture.Data.File.Text{
                     outputString += "\n";
                 }
 
-                //foreach line add it to output
-                foreach(IniLine line in this.parsedLines){
-                    outputString += $"{line}\n";
+                //each line add to the output
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    if(i != 0){
+                        outputString += "\n";
+                    }
+                    outputString += $"{this.parsedLines[i].ToRawString()}";
                 }
 
                 if(this.sections != null){
-                    //leave empty line
-                    outputString += "\n";
-
                     //add section
                     foreach (KeyValuePair<string, ParsedIni> section in this.sections){
-                        outputString += $"{section.Value}\n";
+                        outputString += $"\n{section.Value}";
                     }
                 }
 
@@ -890,18 +1809,18 @@ namespace EchoCapture.Data.File.Text{
                     outputString += "\n";
                 }
 
-                //foreach line add it to output
-                foreach(IniLine line in this.parsedLines){
-                    outputString += $"{line.ToRawString()}\n";
+                //each line add to the output
+                for (int i = 0; i < this.parsedLines.Count; i++){
+                    if(i != 0){
+                        outputString += "\n";
+                    }
+                    outputString += $"{this.parsedLines[i].ToRawString()}";
                 }
 
                 if(this.sections != null){
-                    //leave empty line
-                    outputString += "\n";
-
                     //add section
                     foreach (KeyValuePair<string, ParsedIni> section in this.sections){
-                        outputString += $"{section.Value.ToRawString()}\n";
+                        outputString += $"\n{section.Value.ToRawString()}";
                     }
                 }
 
@@ -1040,7 +1959,7 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Retrieves the information from the line and update the fields.</summary>
-            /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when failed to parse value.</exception>
+            /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when failed to parse value, or comment is invalid.</exception>
             private void ParseLine(string line){
                 //update reference
                 this.line = line;
@@ -1067,6 +1986,11 @@ namespace EchoCapture.Data.File.Text{
                                 isSectionHeader = true;
                                 //update section header
                                 this.sectionHeader = part[0].Substring(1, endSectionCharIndex-1);
+
+                                //invalid section header
+                                if(this.sectionHeader.Contains('\n')){
+                                    throw new IniLineDataParsingException();
+                                }
                             }
                         }
                     }
@@ -1097,6 +2021,13 @@ namespace EchoCapture.Data.File.Text{
                             //update comment
                             this.inlineComment = /*IniFile.COMMENT_CHARS[i] +*/ part[0];
                             break;
+                        }
+                    }
+
+                    if(!String.IsNullOrEmpty(this.inlineComment)){
+                        //invalid inline comment
+                        if(!IniLine.ValidateComment(this.inlineComment)){
+                            throw new IniLineDataParsingException();
                         }
                     }
 
@@ -1158,7 +2089,7 @@ namespace EchoCapture.Data.File.Text{
                         }
 
                         //update parts
-                        valuePart = part[1].Substring(0, charIndex-1);
+                        valuePart = part[1].Substring(0, charIndex);
                         commentPart = part[1].Substring(charIndex);
                         break;
                     }
@@ -1174,6 +2105,11 @@ namespace EchoCapture.Data.File.Text{
                         this.lineType = IniLineType.Invalid;
 
                         return;
+                    }
+
+                    //invalid inline comment
+                    if(commentPart != null && !IniLine.ValidateComment(commentPart)){
+                        throw new IniLineDataParsingException();
                     }
 
                     //update comment
@@ -1203,6 +2139,107 @@ namespace EchoCapture.Data.File.Text{
                 }
             }
 
+
+            /// <summary> Creates a line with typeof fully commented line, with <paramref name="comment"/> specified.</summary>
+            /// <param name="comment"> The string, including the comment char.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
+            public static IniLine CreateCommentLine(string comment){
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid", "comment");
+                }
+
+                //create line with all default values
+                IniLine line = new IniLine();
+                //update values
+                line.lineType = IniLineType.FullyCommented;
+                line.line = comment;
+                line.inlineComment = comment;
+
+                return line;
+            }
+
+            /// <summary> Creates a line with typeof subsection header.</summary>
+            /// <param name="headerName"> The name of the header, without the square brackets.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when header name is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when header name is invalid.</exception>
+            public static IniLine CreateSubsectionHeader(string headerName){
+                //checking and validating comment
+                if(String.IsNullOrEmpty(headerName)){
+                    throw new ArgumentNullException("headerName cannot be empty or null.", "headerName");
+                }
+
+                //update name with brackets
+                if(!headerName.StartsWith(IniFile.START_SECTION)){
+                    headerName = IniFile.START_SECTION + headerName;
+                }
+                if(!headerName.StartsWith(IniFile.END_SECTION)){
+                    headerName += IniFile.END_SECTION;
+                }
+
+                if(!IsHeader(headerName)){
+                    throw new ArgumentException("Header name is invalid.", "headerName");
+                }
+
+                //create line with all default values
+                IniLine line = new IniLine();
+                //update values
+                line.lineType = IniLineType.SectionHeader;
+                line.sectionHeader = headerName;
+
+                //update raw
+                line.line = $"{headerName}";
+
+                return line;
+            }
+
+            /// <summary> Creates a line with typeof subsection header, with <paramref name="comment"/> specified.</summary>
+            /// <param name="headerName"> The name of the header.</param>
+            /// <param name="comment"> The string, including the comment char.</param>
+            /// <exception cref="System.ArgumentNullException"> Thrown when header name or comment is null.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when header name or comment is invalid.</exception>
+            public static IniLine CreateSubsectionHeader(string headerName, string comment){
+                //checking and validating comment
+                if(String.IsNullOrEmpty(headerName)){
+                    throw new ArgumentNullException("headerName cannot be empty or null.", "headerName");
+                }
+
+                //update name with brackets
+                if(!headerName.StartsWith(IniFile.START_SECTION)){
+                    headerName = IniFile.START_SECTION + headerName;
+                }
+                if(!headerName.StartsWith(IniFile.END_SECTION)){
+                    headerName = headerName + IniFile.END_SECTION;
+                }
+
+                if(!IsHeader(headerName)){
+                    throw new ArgumentException("Header name is invalid.", "headerName");
+                }
+
+                //checking and validating comment
+                if(String.IsNullOrEmpty(comment)){
+                    throw new ArgumentNullException("Comment cannot be empty or null.", "comment");
+                }
+                if(!IniLine.ValidateComment(comment)){
+                    throw new ArgumentException("Comment is invalid", "comment");
+                }
+
+                //create line with all default values
+                IniLine line = new IniLine();
+                //update values
+                line.lineType = IniLineType.SectionHeader;
+                line.sectionHeader = headerName;
+                line.inlineComment = comment;
+
+                //update raw
+                line.line = $"{headerName} {comment}";
+
+                return line;
+            }
 
             /// <summary> Creates a line with typeof key-value line, with the <paramref name="value"/>.</summary>
             /// <param name="key"> The name of the key.</param>
@@ -1268,6 +2305,14 @@ namespace EchoCapture.Data.File.Text{
                 }
                 if(key.Split(' ').Length > 1){
                     throw new ArgumentException("Key needs to be a word with no whitespace.", "key");
+                }
+
+                //invalid inline comment
+                if(String.IsNullOrEmpty(inlineComment)){
+                    throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -1385,9 +2430,12 @@ namespace EchoCapture.Data.File.Text{
                     throw new InvalidOperationException();
                 }
 
-                //invalid comment
+                //invalid inline comment
                 if(String.IsNullOrEmpty(inlineComment)){
                     throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
+                }
+                if(!IniLine.ValidateComment(inlineComment)){
+                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -1435,6 +2483,7 @@ namespace EchoCapture.Data.File.Text{
                 //update with new line
                 this.line = keyConstructedLine;
             }
+
 
             /// <summary> Removes the two double quote at the beginning and ending of the string.</summary>
             private static string DoubleQuoteTrimString(string decodedString){
@@ -1492,6 +2541,23 @@ namespace EchoCapture.Data.File.Text{
                 return inputLine;
             }
 
+            /// <summary> Determine if inline comment part, is valid.</summary>
+            /// <remarks> <paramref name="inlineCommentPart"/> should contain the comment char and should not contain line break char.</remarks>
+            /// <returns> True if valid.</returns>
+            public static bool ValidateComment(string inlineCommentPart){
+                //check if not start comment chars
+                if(!inlineCommentPart.StartsWith(IniFile.COMMENT) && !inlineCommentPart.StartsWith(IniFile.ALT_COMMENT)){
+                    return false;
+                }
+
+                //contains line break char
+                if(inlineCommentPart.Contains('\n')){
+                    return false;
+                }
+
+                return true;
+            }
+
             /// <summary> Decode the parsed string to a normal string.</summary>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when can't parse to a validated string.</exception>
             private string DecodeToString(string parsedValue){
@@ -1499,20 +2565,39 @@ namespace EchoCapture.Data.File.Text{
                 if(parsedValue == bool.TrueString || parsedValue == bool.FalseString){
                     //throw exception
                     throw new IniLineDataParsingException(this, typeof(bool));
-                } else {
-                    if(IniFile.IsNumericRegex.IsMatch(parsedValue)){
+                }
+
+                //determine if there was exception
+                bool caughtException = false;
+
+                //checking if invalid
+                //try to parse int
+                try{
+                    int.Parse(parsedValue);
+                } catch (Exception){
+                    //caught
+                    caughtException = true;
+                } finally {
+                    if(!caughtException){
                         //throw exception
                         throw new IniLineDataParsingException(this, typeof(int));
-                    } else {
-                        //split into two; for float
-                        string[] splittedNumber = parsedValue.Split('.', 2);
-                        //check if float
-                        if(splittedNumber.Length == 2){
-                            if(IniFile.IsNumericRegex.IsMatch(splittedNumber[0]) && IniFile.IsNumericRegex.IsMatch(splittedNumber[1])){
-                                //throw exception
-                                throw new IniLineDataParsingException(this, typeof(float));
-                            }
-                        }
+                    }
+                }
+
+                //reset
+                caughtException = false;
+
+                //checking if invalid
+                //try to parse float
+                try{
+                    float.Parse(parsedValue);
+                } catch (Exception){
+                    //caught
+                    caughtException = true;
+                } finally {
+                    if(!caughtException){
+                        //throw exception
+                        throw new IniLineDataParsingException(this, typeof(float));
                     }
                 }
                 
@@ -1570,11 +2655,8 @@ namespace EchoCapture.Data.File.Text{
                 float f_value;
 
                 try{
-                    //define style
-                    System.Globalization.NumberStyles styles = System.Globalization.NumberStyles.AllowDecimalPoint | System.Globalization.NumberStyles.AllowLeadingWhite
-                    | System.Globalization.NumberStyles.AllowLeadingWhite | System.Globalization.NumberStyles.AllowLeadingSign;
                     //parse
-                    f_value = Single.Parse(parsedValue, styles);
+                    f_value = Single.Parse(parsedValue);
                 } catch(Exception){
                     //throw exception
                     throw new IniLineDataParsingException(this);
@@ -1623,7 +2705,7 @@ namespace EchoCapture.Data.File.Text{
                         }
 
                         //update parts
-                        valuePart = part[1].Substring(0, charIndex-1);
+                        valuePart = part[1].Substring(0, charIndex);
                         commentPart = part[1].Substring(charIndex);
                         break;
                     }
@@ -1642,26 +2724,22 @@ namespace EchoCapture.Data.File.Text{
                     //boolean type
                     if(valuePart == bool.TrueString || valuePart == bool.FalseString){
                         return typeof(bool);
-
-                    //integer type
-                    } else if(IniFile.IsNumericRegex.IsMatch(valuePart)){
-                        return typeof(int);
-
-                    //float or string type
-                    } else {
-                        //split into two; for float
-                        string[] splittedNumber = valuePart.Split('.');
-
-                        //check if float
-                        if(splittedNumber.Length == 2){
-                            if(IniFile.IsNumericRegex.IsMatch(splittedNumber[0]) && IniFile.IsNumericRegex.IsMatch(splittedNumber[1])){
-                                return typeof(float);
-                            }
-                        }
-
-                        //string type
-                        return typeof(string);
                     }
+                    
+                    //try to parse int
+                    try{
+                        int.Parse(valuePart);
+                        return typeof(int);
+                    } catch (Exception){}
+
+                    //try to parse float
+                    try{
+                        float.Parse(valuePart);
+                        return typeof(float);
+                    } catch (Exception){}
+
+                    //string type
+                    return typeof(string);
                 }
 
                 //line is not a key-value line
@@ -1684,6 +2762,15 @@ namespace EchoCapture.Data.File.Text{
                         if(endSectionCharIndex - 1 > 0){
                             //update state
                             isSectionHeader = true;
+
+                            //get section header
+                            string part = line.Substring(1, endSectionCharIndex-1);
+
+                            part.Dump();
+                            //invalid section header
+                            if(part.Contains('\n')){
+                                return false;
+                            }
                         }
                     }
                 }
@@ -1782,7 +2869,6 @@ namespace EchoCapture.Data.File.Text{
                 return this.line;
             }
         }
-
     }
     
     /// <summary> List of constant defining line type based on the line-content.</summary>
@@ -1805,8 +2891,15 @@ namespace EchoCapture.Data.File.Text{
 }
 
 //to-do: finish method ChangeValueType; to be used in SetValueIgnoringType //done testing
-//to-do: add method SetValueIgnoringType; mainly because of conflict between integer and float //need testing
-//to-do: add method AddValue; add a new key-value line instead of overwriting, default at the end or if provided at a given index
-//to-do: add method AddLineComment; add fully commented line, default at the end or if provided at a given index
-//to-do: add method RemoveValue; remove key-value line only
-//to-do: add method RemoveLine; remove any line based from given index
+//to-do: add method SetValueIgnoringType; mainly because of conflict between integer and float //done testing
+//to-do: add method AddValue; add a new key-value line instead of overwriting, default at the end or if provided at a given index //done testing
+//to-do: add method AddLineComment; add fully commented line, default at the end or if provided at a given index //done testing
+//to-do: add method RemoveValue; remove key-value line only //done testing
+//to-do: add method RemoveLine; remove any line based from given index //done testing
+//to-do: add method to create new section //done testing
+//to-do: add method to remove section //done testing
+//to-do: add method to check for section //done testing
+
+//to-do: add method for creating Header Line //done
+//to-do: throw exception for subsection method where state is invalid. //done
+//to-do: complete to-dos
