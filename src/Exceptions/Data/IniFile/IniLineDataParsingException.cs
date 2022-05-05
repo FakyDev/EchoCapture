@@ -35,7 +35,7 @@ namespace EchoCapture.Exceptions.Data.IniFile{
         /// <param name="typeGotInstead"> The type of the value, which was found instead.</param>
         private static string CreateMessage(File.IniFile.IniLine instance, Type typeGotInstead){
             //return message
-            if(typeGotInstead == null){
+            if(typeGotInstead != null){
                 return $"Failed to parse value into {instance.ValueType.ToString()}. Value was found to be type of {typeGotInstead.ToString()}.";
             }
             return $"Failed to parse value into {instance.ValueType.ToString()}.";
