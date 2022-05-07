@@ -175,6 +175,8 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Initialise the instance for global and create section instances.</summary>
             /// <param name="content"> The ini file content to parse.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when one of <paramref name="content"/>, failed to parsed into an ini line. Another case is when
+            /// two different parsed lines contain same key.</exception>
             private void Initialise(string[] content){
                 //will hold index of header lines
                 List<int> headerIndex = new List<int>();
@@ -192,7 +194,7 @@ namespace EchoCapture.Data.File.Text{
 
                     //invalid line
                     if(parsedLine.LineType == IniLineType.Invalid){
-                        //to-do: throw exception
+                        throw new ArgumentException("Failed to parse a line into an ini line, from the string array.");
 
                     //header line type
                     } else if(parsedLine.LineType == IniLineType.SectionHeader){
@@ -209,8 +211,7 @@ namespace EchoCapture.Data.File.Text{
 
                 //contains duplicate key
                 if(!this.DuplicateKeyCheck()){
-                    throw new Exception();
-                    //to-do: change exception
+                    throw new ArgumentException("Parsed ini lines contain duplicate keys.");
                 }
 
                 //looping through headerIndex to create new instance of ParsedIni as subsection
@@ -239,6 +240,7 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Initialise the instance for section.</summary>
             /// <param name="parsedLines"> The already passed ini lines.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when two different parsed lines contain same key.</exception>
             private void SectionInitialise(List<IniLine> parsedLines){
                 //update header
                 this.headerLine = parsedLines[0];
@@ -250,8 +252,7 @@ namespace EchoCapture.Data.File.Text{
 
                 //contains duplicate key
                 if(!this.DuplicateKeyCheck()){
-                    throw new Exception();
-                    //to-do: change exception
+                    throw new ArgumentException("Parsed ini lines contain duplicate keys.");
                 }
             }
 
@@ -1576,6 +1577,8 @@ namespace EchoCapture.Data.File.Text{
             /// <param name="name"> The name of the section header.</param>
             /// <param name="content"> The array of lines to parse into IniLine.</param>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when one of <paramref name="content"/>, failed to parsed into an ini line. Another case is when
+            /// two different parsed lines contain same key and the last one is when a header line is found.</exception>
             /// <returns> True if created section succesfully else failed.</returns>
             public bool CreateSubsection(string name, string[] content){
                 //subsection
@@ -1607,16 +1610,21 @@ namespace EchoCapture.Data.File.Text{
 
                     //invalid line
                     if(parsedLine.LineType == IniLineType.Invalid){
-                        //to-do: throw exception
+                        throw new ArgumentException("Failed to parse a line into an ini line, from the string array.");
 
                     //header line type
                     } else if(parsedLine.LineType == IniLineType.SectionHeader){
-                        //to-do: throw exception
+                        throw new ArgumentException("Parsed ini lines cannot contain header line. Cannot create subsection in another subsection.");
 
                     } else {
                         //update list
                         subsectionIns.parsedLines.Add(parsedLine);
                     }
+                }
+
+                //duplicate key check
+                if(!subsectionIns.DuplicateKeyCheck()){
+                    throw new ArgumentException("Parsed ini lines contain duplicate keys.");
                 }
 
                 //add section
@@ -1631,6 +1639,8 @@ namespace EchoCapture.Data.File.Text{
             /// <param name="comment"> The comment to add to the header line.</param>
             /// <remarks> Comment specified is added to the header line of this creating section.</remarks>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when one of <paramref name="content"/>, failed to parsed into an ini line. Another case is when
+            /// two different parsed lines contain same key and the last one is when a header line is found.</exception>
             /// <returns> True if created section succesfully else failed.</returns>
             public bool CreateSubsection(string name, string[] content, string comment){
                 //subsection
@@ -1662,16 +1672,21 @@ namespace EchoCapture.Data.File.Text{
 
                     //invalid line
                     if(parsedLine.LineType == IniLineType.Invalid){
-                        //to-do: throw exception
+                        throw new ArgumentException("Failed to parse a line into an ini line, from the string array.");
 
                     //header line type
                     } else if(parsedLine.LineType == IniLineType.SectionHeader){
-                        //to-do: throw exception
+                        throw new ArgumentException("Parsed ini lines cannot contain header line. Cannot create subsection in another subsection.");
 
                     } else {
                         //update list
                         subsectionIns.parsedLines.Add(parsedLine);
                     }
+                }
+
+                //duplicate key check
+                if(!subsectionIns.DuplicateKeyCheck()){
+                    throw new ArgumentException("Parsed ini lines contain duplicate keys.");
                 }
 
                 //add section
@@ -1764,7 +1779,7 @@ namespace EchoCapture.Data.File.Text{
             /// <summary> Try to get the subsection and passed it as reference.</summary>
             /// <param name="name"> The name of the subsection header.</param>
             /// <returns> True if found.</returns>
-            public bool RetrieveSubsection(string name, out ParsedIni subsection){
+            private bool RetrieveSubsection(string name, out ParsedIni subsection){
                 return this.sections.TryGetValue(name, out subsection);
             }
 
@@ -2516,10 +2531,11 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Correct the line to a correct state with escaped char and double quote wrapped if needed.</summary>
+            /// <exception cref="System.ArgumentNullException"> Input line is empty or null.</exception>
             private static string EscapeCharAndWrapLine(string inputLine){
                 //invalid parameter
                 if(String.IsNullOrEmpty(inputLine)){
-                    //to-do: throw exception
+                    throw new ArgumentNullException("Cannot modify empty or nullified string.");
                 }
 
                 //clear additional white space
@@ -2889,17 +2905,3 @@ namespace EchoCapture.Data.File.Text{
         Invalid
     }
 }
-
-//to-do: finish method ChangeValueType; to be used in SetValueIgnoringType //done testing
-//to-do: add method SetValueIgnoringType; mainly because of conflict between integer and float //done testing
-//to-do: add method AddValue; add a new key-value line instead of overwriting, default at the end or if provided at a given index //done testing
-//to-do: add method AddLineComment; add fully commented line, default at the end or if provided at a given index //done testing
-//to-do: add method RemoveValue; remove key-value line only //done testing
-//to-do: add method RemoveLine; remove any line based from given index //done testing
-//to-do: add method to create new section //done testing
-//to-do: add method to remove section //done testing
-//to-do: add method to check for section //done testing
-
-//to-do: add method for creating Header Line //done
-//to-do: throw exception for subsection method where state is invalid. //done
-//to-do: complete to-dos
