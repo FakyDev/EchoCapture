@@ -3,7 +3,7 @@ using File = EchoCapture.Data.File.Text;
 
 namespace EchoCapture.Exceptions.Data.IniFile{
     
-    /// <summary> Defining failure to pass a value in one of the line(s) of an ini file.</summary>
+    /// <summary> Defining failure to pass or search a value in one of the line(s) of an ini file.</summary>
     public sealed class IniLineDataParsingException : Exception{
         public IniLineDataParsingException(){}
 
