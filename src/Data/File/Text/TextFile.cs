@@ -13,6 +13,7 @@ namespace EchoCapture.Data.File.Text{
         /// <summary> Encoding use to represent text.</summary>
         private Encoding textEncoding;
         
+        /// <summary> Creating a text file from path specified and choosen encoding.</summary>
         public TextFile(string name, string path, Encoding encoding) : base(name, FileExtension.txt, path){
             //update encoding
             this.textEncoding = encoding;
@@ -47,7 +48,7 @@ namespace EchoCapture.Data.File.Text{
 
             try{
                 //create the filestream
-                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.Read, 4096, true)){
+                using(FileStream fs = new FileStream(this.FullPath, FileMode.Truncate, FileAccess.Write, FileShare.Read, 4096, true)){
                     //write to file
                     await fs.WriteAsync(convertedValue);
                 }
@@ -58,7 +59,7 @@ namespace EchoCapture.Data.File.Text{
         }
 
         /// <inheritdoc/>
-        /// <remarks> Make sure to free resource after.</remarks>
+        /// <remarks> Make sure to free resource after. Cannot guarantee if data is fully overwritten, in case when new text length is less than old text length.</remarks>
         /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists, or filestream is invalid.</exception>
         /// <exception cref="System.ArgumentException"> Thrown when failed to encode text.</exception>
         public async override Task OverwriteFileAsync(FileStream fs, string text){
@@ -212,7 +213,7 @@ namespace EchoCapture.Data.File.Text{
         /// <param name="text"> The new text to overwrite the file with.</param>
         /// <returns> True if overwritten the file otherwise, either failed to save file or get filestream.</returns>
         /// <exception cref="System.ArgumentException"> Thrown when failed to encode text.</exception>
-        public bool OverwriteFile(string text){
+        public virtual bool OverwriteFile(string text){
             //does not exists
             if(!FileExists){
                 return false;
@@ -229,8 +230,8 @@ namespace EchoCapture.Data.File.Text{
             }
 
             try{
-                //create file stream
-                using(FileStream fs = new FileStream(this.FullPath, FileMode.Open, FileAccess.Write, FileShare.None, 4096, false)){
+                //create file stream, erasing all data
+                using(FileStream fs = new FileStream(this.FullPath, FileMode.Truncate, FileAccess.Write, FileShare.None, 4096, false)){
                     //save
                     fs.Write(convertedValue);
                 }
@@ -244,12 +245,12 @@ namespace EchoCapture.Data.File.Text{
         }
 
         /// <summary> Overwrite the existing file.</summary>
-        /// <remarks> Make sure to free resource after.</remarks>
+        /// <remarks> Make sure to free resource after. Cannot guarantee if data is fully overwritten, in case when new text length is less than old text length.</remarks>
         /// <param name="fs"> The file stream to use.</param>
         /// <param name="value"> The new text to overwrite with.</param>
         /// <returns> True if overwritten the file otherwise, either failed to save file or invalid filestream.</returns>
         /// <exception cref="System.ArgumentException"> Thrown when failed to encode text.</exception>
-        public bool OverwriteFile(FileStream fs, string text){
+        public virtual bool OverwriteFile(FileStream fs, string text){
             //not same file or cannot write
             if(fs.Name != this.FullPath || !fs.CanWrite){
                 return false;
