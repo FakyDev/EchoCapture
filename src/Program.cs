@@ -69,52 +69,6 @@ namespace EchoCapture{
 
 
         public static void Main(string[] args){
-            /*
-                string ab = $"lol = asd# ;adsa\ntestMessage = \"before line break\\n \\\"after line break\nmoney = 100.23\nmaoney = 1999 ;hellor\n;a fully commented line with alt char\na = b\nsada = avsd\n[test]\nmoney=100\n#this is a fully commented line\na = \"a asdsa\"";
-                string[] lines = EchoCapture.Data.File.Text.IniFile.SeperateLines(ab);
-
-                EchoCapture.Data.File.Text.IniFile.ParsedIni a = new EchoCapture.Data.File.Text.IniFile.ParsedIni(lines);
-
-                Console.WriteLine(a.ToRawString());
-
-                float value;
-                int val2ue;
-                a.SearchValue<int>("test", "money", out val2ue);
-                val2ue.Dump();
-
-                a.SetValue<float>("test", "money", 100f);
-
-                a.SearchValue<float>("test", "money", out value);
-                value.Dump();
-            */
-
-            /*
-            EchoCapture.Data.File.Text.IniFile.ParsedIni ins = new EchoCapture.Data.File.Text.IniFile.ParsedIni(new string[2]{"money = 1.00000655E+14#comment", "[testSection]"});
-
-            ins.SetValueIgnoringType<int>("money", 12302);
-            ins.AddValueAtEnd<string>("newText", "This is a text");
-            ins.AddLineComment("this is a comment", 1);
-            ins.AddLineCommentAtEnd("ending fully commented line");
-            ins.AddLineCommentAtEnd("testSection", "comment in another subsection");
-
-            ins.RemoveLine(1);
-            ins.RemoveValue("newText");
-            ins.RemoveLine("testSection", 0);
-
-            ins.CreateSubsection("notfaizmom", new string[2]{"money = 1.00000655E+14#comment", "krish = \"random text\""}, "a new comment").Dump();
-
-            ins.ToRawString().Dump();
-
-            Debug.SkipLine();
-            Debug.SkipLine();
-            ins.ToRawString().Dump();
-
-            EchoCapture.Data.File.Text.IniFile.ParsedIni ab;
-
-            ins.RetrieveSubsection("notfaizmom", out ab);
-
-            ab.ToRawString().Dump(); */
-    
             //update state
             if(args.Length == 2 && args[0] == "captureDebug"){
                 Program.currentState = ApplicationState.Debug;
