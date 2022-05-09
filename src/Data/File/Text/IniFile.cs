@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +8,7 @@ using EchoCapture.Exceptions.Data.IniFile;
 
 namespace EchoCapture.Data.File.Text{
 
+    /// <summary> Allows to perform synchronous and asynchronous file-related operations to ini file, allow parsing to ini line, vice-versa and much more.</summary>
     public class IniFile : TextFile{
 
         /// <summary> The character used to define the value by its key.</summary>
@@ -34,6 +36,16 @@ namespace EchoCapture.Data.File.Text{
         /// <summary> Array of characters to escape.</summary>
         private static char[] ToEscapeChar = new char[]{IniFile.SELECTOR, IniFile.COMMENT, IniFile.ALT_COMMENT};
 
+        /// <summary> Hold the instance of the parsed ini which is representing this file.</summary>
+        /// <remarks> This will be used to save and update ini files, and it will be used to represent content read from an ini file.</remarks>
+        private ParsedIni parsed_ini = null;
+
+        /// <summary> (Get only) Return the parsed ini representing this file.</summary>
+        public ParsedIni Parsed_ini{
+            get{
+                return this.parsed_ini;
+            }
+        }
 
         public IniFile(string name, string path) : base(name, path, Encoding.UTF8, FileExtension.ini){}
 
@@ -126,6 +138,199 @@ namespace EchoCapture.Data.File.Text{
             return lines;
         }
 
+
+        /// <summary> Reads the file and update the instance representing the file.</summary>
+        /// <remarks> If failed, you might want to update this representing instance to an empty one by using <see cref="EchoCapture.Data.File.Text.IniFile.Emptify"/></remarks>
+        /// <returns> True on success of reading and updating the representing instance.</returns>
+        public bool Load(){
+            //read lines
+            string lines;
+
+            //failed to read file
+            if(!this.ReadFile(out lines)){
+                return false;
+            }
+
+            //empty file
+            if(lines == "" || String.IsNullOrEmpty(lines)){
+                this.parsed_ini = ParsedIni.EmptyParsedIni;
+
+                return true;
+            }
+
+            //parse lines
+            try{
+                this.parsed_ini = new ParsedIni(IniFile.SeperateLines(lines));
+            } catch (Exception){
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary> Save the representing instance to the file.</summary>
+        /// <remarks> True if successfully saved else failed.</remarks>
+        public bool Save(){
+            //get string
+            string combinedLines = this.parsed_ini.ToRawString();
+
+            //if empty string
+            //update so that no exception is thrown
+            if(combinedLines == "" || String.IsNullOrEmpty(combinedLines)){
+                combinedLines = " \n";
+            }
+
+            try{
+                return this.OverwriteFile(combinedLines);
+            } catch (Exception){
+                return false;
+            }
+        }
+
+        /// <summary> Update the instance representing this file to an empty parsed instance.</summary>
+        public void Emptify(){
+            this.parsed_ini = ParsedIni.EmptyParsedIni;
+        }
+        
+        /// <summary> Reads the file, asynchronously, and update the instance representing the file.</summary>
+        /// <remarks> If failed, you might want to update this representing instance to an empty one by using <see cref="EchoCapture.Data.File.Text.IniFile.Emptify"/></remarks>
+        /// <returns> True on success of reading and updating the representing instance.</returns>
+        public async Task<bool> LoadAsync(){
+            //read lines async
+            Task<string> readingTask = this.ReadFileAsync();
+            //will hold lines
+            string lines;
+
+            try{
+                //wait for finish task and update
+                await readingTask;
+                lines = readingTask.Result;
+            } catch (Exception){
+                return false;
+            }
+
+            //empty file
+            if(lines == "" || String.IsNullOrEmpty(lines)){
+                this.parsed_ini = ParsedIni.EmptyParsedIni;
+
+                return true;
+            }
+
+            //parse lines
+            try{
+                this.parsed_ini = new ParsedIni(IniFile.SeperateLines(lines));
+            } catch (Exception){
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary> Save the representing instance to the file, asynchronously.</summary>
+        /// <remarks> True if successfully saved else failed.</remarks>
+        public async Task<bool> SaveAsync(){
+            //get string
+            string combinedLines = this.parsed_ini.ToRawString();
+
+            //if empty string
+            //update so that no exception is thrown
+            if(combinedLines == "" || String.IsNullOrEmpty(combinedLines)){
+                combinedLines = " \n";
+            }
+
+            try{
+                //overwrites asynchronously
+                await this.OverwriteFileAsync(combinedLines);
+            } catch (Exception){
+                //failed
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /// <summary> Overwrite the existing file with <paramref name="combinedLines"/>.</summary>
+        /// <param name="combinedLines"> Lines to parse into ini line, and seperated using a line break char.</param>
+        /// <remarks> Update the representing instance and use <see cref="EchoCapture.Data.File.Text.IniFile.Save"/> instead of this method. <br/>
+        /// On no exception relating to parsing line (argument exception), the instance representing the file will be updated with <paramref name="combinedLines"/>
+        /// , even though if failed to update file.</remarks>
+        /// <returns> True if overwritten the file otherwise, either failed to save file or get filestream.</returns>
+        /// <inheritdoc/>
+        public override bool OverwriteFile(string combinedLines){
+            //splits into lines
+            string[] lines = IniFile.SeperateLines(combinedLines);
+
+            //try to parse lines
+            this.parsed_ini = new ParsedIni(lines);
+
+            //base method
+            //overwrite file with raw string
+            return base.OverwriteFile(this.parsed_ini.ToRawString());
+        }
+
+        /// <summary> Overwrite the existing file using the provided file stream.</summary>
+        /// <remarks> Update the representing instance and use <see cref="EchoCapture.Data.File.Text.IniFile.Save"/> instead of this method. <br/>
+        /// Make sure to free resource after. On no exception relating to parsing line (argument exception), the instance representing the file will be
+        /// updated with <paramref name="combinedLines"/>, even though if failed to update file.  Cannot guarantee if data is fully
+        /// overwritten, in case when new text length is less than old text length.</remarks>
+        /// <param name="fs"> The file stream to use.</param>
+        /// <param name="combinedLines"> Lines to parse into ini line, and seperated using a line break char.</param>
+        /// <returns> True if overwritten the file otherwise, either failed to save file or invalid filestream.</returns>
+        public override bool OverwriteFile(FileStream fs, string combinedLines){
+            //splits into lines
+            string[] lines = IniFile.SeperateLines(combinedLines);
+
+            //try to parse lines
+            this.parsed_ini = new ParsedIni(lines);
+
+            //base method
+            //overwrite file with raw string
+            return base.OverwriteFile(fs, this.parsed_ini.ToRawString());
+        }
+
+
+        /// <summary> Overwrite the existing file with <paramref name="combinedLines"/>, asynchronously.</summary>
+        /// <param name="combinedLines"> Lines to parse into ini line, and seperated using a line break char.</param>
+        /// <remarks> Update the representing instance and use <see cref="EchoCapture.Data.File.Text.IniFile.SaveAsync"/> instead of this method. <br/>
+        /// On no exception relating to parsing line (argument exception), the instance representing the file will be updated with <paramref name="combinedLines"/>
+        /// , even though if failed to update file.</remarks>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists.</exception>
+        /// <exception cref="System.ArgumentException"> Thrown when failed to encode text.</exception>
+        /// <inheritdoc/>
+        public async override Task OverwriteFileAsync(string combinedLines){
+            //splits into lines
+            string[] lines = IniFile.SeperateLines(combinedLines);
+
+            //try to parse lines
+            this.parsed_ini = new ParsedIni(lines);
+
+            //base async method
+            //overwrite file with raw string
+            await base.OverwriteFileAsync(this.parsed_ini.ToRawString());
+        }
+
+        /// <summary> Overwrite the existing file with <paramref name="combinedLines"/> using the provided file stream, asynchronously.</summary>
+        /// <param name="combinedLines"> Lines to parse into ini line, and seperated using a line break char.</param>
+        /// <remarks> Update the representing instance and use <see cref="EchoCapture.Data.File.Text.IniFile.SaveAsync"/> instead of this method. <br/>
+        /// Make sure to free resource after. On no exception relating to parsing line (argument exception), the instance
+        /// representing the file will be updated with <paramref name="combinedLines"/>, even though if failed to update file.
+        /// Cannot guarantee if data is fully overwritten, in case when new text length is less than old text length.</remarks>
+        /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists, or filestream is invalid.</exception>
+        /// <exception cref="System.ArgumentException"> Thrown when failed to encode text.</exception>
+        /// <inheritdoc/>
+        public async override Task OverwriteFileAsync(FileStream fs, string combinedLines){
+            //splits into lines
+            string[] lines = IniFile.SeperateLines(combinedLines);
+
+            //try to parse lines
+            this.parsed_ini = new ParsedIni(lines);
+
+            //base async method
+            //overwrite file with raw string
+            await base.OverwriteFileAsync(fs, this.parsed_ini.ToRawString());
+        }
+
         /// <summary> Object representing the data structurely of an ini file.</summary>
         public class ParsedIni{
             
@@ -138,7 +343,7 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> List holding parsed ini line.</summary>
             /// <remarks> Represent data for current section or global, depends on <see cref="EchoCapture.Data.File.Text.IniFile.ParsedIni.isSection"/></remarks>
-            public List<IniLine> parsedLines = new List<IniLine>();
+            private List<IniLine> parsedLines = new List<IniLine>();
 
             /// <summary> Hold a sections of the ini.</summary>
             /// <remarks> Not null only if representing global.</remarks>
@@ -147,6 +352,16 @@ namespace EchoCapture.Data.File.Text{
             /// <summary> Hold the name of the current key checking against for.</summary>
             private string currentKeyNameCheck = null;
 
+            /// <summary> (Get only) Return empty parsed ini.</summary>
+            public static ParsedIni EmptyParsedIni{
+                get{
+                    return new ParsedIni();
+                }
+            }
+
+            /// <summary> Create with string array to parse into ini lines.</summary>
+            /// <exception cref="System.ArgumentException"> Thrown when string array is empty, or its content is invalid.</exception>
+            /// <exception cref="System.ArgumentNullException"> Thrown when string array is null.</exception>
             public ParsedIni(string[] content){
                 //throw exception
                 if(content == null){
