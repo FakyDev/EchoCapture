@@ -18,6 +18,30 @@ namespace EchoCapture.Data.File.Image{
         /// <summary> Hold the image format of the bitmap.</summary>
         private ImageFormat imageFormat;
 
+        /// <summary> Determine if need to reload to png quality config.</summary>
+        private static bool pngQualitySettingRefresh = false;
+
+        /// <summary> Holds the object representing the png quality setting.</summary>
+        private static ApplicationData.PngQualitySetting _pngQualitySetting = default(ApplicationData.PngQualitySetting);
+
+        /// <summary> (Get only) Returns the object representing the png quality setting.</summary>
+        public static ApplicationData.PngQualitySetting _PngQualitySetting{
+            get{
+                //checks if default
+                if(ImageFile.pngQualitySettingRefresh || ImageFile._pngQualitySetting.Equals(default(ApplicationData.PngQualitySetting))){
+                    //refresh and update
+                    ApplicationData.RefreshPngQualityConfig();
+                    ImageFile._pngQualitySetting = ApplicationData.GetPngQualityData();
+
+                    //update state
+                    ImageFile.pngQualitySettingRefresh = false;
+                }
+
+                return ImageFile._pngQualitySetting;
+            }
+        }
+
+
         /// <param name="name"> Name of the image file.</param>
         /// <param name="path"> Directory of the image file is located in.</param>
         /// <param name="name"> Extension of the image file.</param>
@@ -130,12 +154,24 @@ namespace EchoCapture.Data.File.Image{
 
         /// <summary> Screenshot the entire screen and return in a bitmap object.</summary>
         /// <remarks> You may want to clear resources.</remarks>
-        public static Bitmap Screenshot(){
+        public static Bitmap Screenshot(FileExtension fileExtension){
+            //chooses the pixelFormat to use
+            PixelFormat pixelFormat;
+            if(fileExtension == FileExtension.png){
+                pixelFormat = ImageFile._PngQualitySetting._PixelFormat;
+            } else if(fileExtension == FileExtension.jpg){
+                pixelFormat = ImageFile._PngQualitySetting._PixelFormat;
+            } else {
+                //to-do: update
+                throw new Exception();
+            }
             //get the bounds of the screen
             Rectangle bounds = Screen.GetBounds(Point.Empty);
 
             //create bitmap, with screen size
-            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppRgb);
+            //Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, pixelFormat);
+
+            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, pixelFormat);
 
             //create a graphics object from the bitmap
             using(Graphics captureGraphics = Graphics.FromImage(bmp)){
@@ -155,6 +191,12 @@ namespace EchoCapture.Data.File.Image{
 
             return false;
         }
+
+        /// <summary> Allows to reload the png quality setting, next time that png quality setting are fetched.</summary>
+        public static void QueueForPngQualitySettingRefresh(){
+            ImageFile.pngQualitySettingRefresh = true;
+        }
+
 
         #region Asynchronous file operations
 
@@ -258,8 +300,10 @@ namespace EchoCapture.Data.File.Image{
             Byte[] convertedBmp;
             //convert the bitmap
             using(MemoryStream ms = new MemoryStream()){
+                //Encoder.Quality;
+                //EncoderValue.CompressionRle
                 //save to stream
-                value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                value.Save(ms, ImageFormat.Png);
                 //get value
                 convertedBmp = ms.ToArray();
             }
