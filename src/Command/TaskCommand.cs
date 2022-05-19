@@ -160,6 +160,8 @@ namespace EchoCapture.Command{
                 this.isRunning = true;
                 //update token source
                 this.cancelTokenSource = new CancellationTokenSource();
+                //refresh png quality setting
+                ImageFile.QueueForPngQualitySettingRefresh();
                 //start work
                 this.work = this.ExecuteWork(this.cancelTokenSource.Token, (int)delay, (FileExtension)imageExtension);
 
