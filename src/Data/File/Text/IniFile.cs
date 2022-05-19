@@ -174,6 +174,27 @@ namespace EchoCapture.Data.File.Text{
             //get string
             string combinedLines = this.parsed_ini.ToRawString();
 
+            /*
+            //if empty string
+            //update so that no exception is thrown
+            if(combinedLines == "" || String.IsNullOrEmpty(combinedLines)){
+                combinedLines = " \n";
+            }*/
+
+            try{
+                return this.OverwriteFile(combinedLines);
+            } catch (Exception){
+                return false;
+            }
+        }
+
+        /// <summary> Save the representing instance to the file.</summary>
+        /// <param name="fs"> The file stream to use.</param>
+        /// <remarks> Make sure to free resource after. True if successfully saved else failed.</remarks>
+        public bool Save(FileStream fs){
+            //get string
+            string combinedLines = this.parsed_ini.ToRawString();
+
             //if empty string
             //update so that no exception is thrown
             if(combinedLines == "" || String.IsNullOrEmpty(combinedLines)){
@@ -181,7 +202,7 @@ namespace EchoCapture.Data.File.Text{
             }
 
             try{
-                return this.OverwriteFile(combinedLines);
+                return this.OverwriteFile(fs, combinedLines);
             } catch (Exception){
                 return false;
             }
@@ -347,7 +368,7 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Hold a sections of the ini.</summary>
             /// <remarks> Not null only if representing global.</remarks>
-            private Dictionary<string, ParsedIni> sections = null;
+            private Dictionary<string, ParsedIni> sections = new Dictionary<string, ParsedIni>();
             
             /// <summary> Hold the name of the current key checking against for.</summary>
             private string currentKeyNameCheck = null;
@@ -636,6 +657,41 @@ namespace EchoCapture.Data.File.Text{
                 }
 
                 //failed
+                return false;
+            }
+
+            /// <summary> Check if a key with the name specified exists.</summary>
+            /// <param name="keyName"> The name of key to check for.</param>
+            public bool KeyExists(string keyName){
+                //loop through lines
+                foreach(IniLine line in this.parsedLines){
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //check name
+                        if(line.Key == keyName){
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            /// <summary> Check if a key with the name specified exists, in a subsection.</summary>
+            /// <param name="keyName"> The name of key to check for.</param>
+            /// <param name="subsection"> The subsection name.</param>
+            public bool KeyExists(string subsection, string keyName){
+                //loop through lines
+                foreach(IniLine line in this.sections[subsection].parsedLines){
+                    //key value line
+                    if(line.LineType == IniLineType.KeyValue){
+                        //check name
+                        if(line.Key == keyName){
+                            return true;
+                        }
+                    }
+                }
+
                 return false;
             }
 
@@ -1247,7 +1303,7 @@ namespace EchoCapture.Data.File.Text{
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> False if key already exists or section does not exists.</returns>
-            public bool AddValue<T>(string subsection, string keyName, T value, int index){
+            public bool AddValueInSubsection<T>(string subsection, string keyName, T value, int index){
                 //subsection
                 if(this.isSection){
                     throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
@@ -1307,7 +1363,7 @@ namespace EchoCapture.Data.File.Text{
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> False if key already exists or section does not exists.</returns>
-            public bool AddValue<T>(string subsection, string keyName, T value, int index, string inlineComment){
+            public bool AddValueInSubsection<T>(string subsection, string keyName, T value, int index, string inlineComment){
                 //subsection
                 if(this.isSection){
                     throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
@@ -1468,7 +1524,7 @@ namespace EchoCapture.Data.File.Text{
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName is invalid.</exception>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> False if key already exists or section does not exists.</returns>
-            public bool AddValueAtEnd<T>(string subsection, string keyName, T value){
+            public bool AddValueInSubsectionAtEnd<T>(string subsection, string keyName, T value){
                 //subsection
                 if(this.isSection){
                     throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
@@ -1525,7 +1581,7 @@ namespace EchoCapture.Data.File.Text{
             /// <exception cref="System.ArgumentException"> Thrown when T is not a valid type reference or when keyName/inlineComment is invalid.</exception>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
             /// <returns> False if key already exists or section does not exists.</returns>
-            public bool AddValueAtEnd<T>(string subsection, string keyName, T value, string inlineComment){
+            public bool AddValueInSubsectionAtEnd<T>(string subsection, string keyName, T value, string inlineComment){
                 //subsection
                 if(this.isSection){
                     throw new InvalidOperationException("Cannot perform action for subsection in a subsection.");
@@ -1610,6 +1666,7 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Add a new fully commented line, with comment specified, in a subsection at the index specified.</summary>
             /// <param name="comment"> The string, not including the comment char.</param>
+            /// <param name="subsection"> The name of the subsection.</param>
             /// <param name="index"> The index to add the line comment.</param>
             /// <remarks> This method is used to create new comment line and then insert it in-between other lines. Specifying
             /// an index beyond the capacity will update the index automatically to the last.</remarks>
@@ -1673,6 +1730,7 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Add a new fully commented line, with comment specified, in a subsection at the end.</summary>
             /// <param name="comment"> The string, not including the comment char.</param>
+            /// <param name="subsection"> The name of the subsection.</param>
             /// <exception cref="System.ArgumentNullException"> Thrown when comment is null.</exception>
             /// <exception cref="System.ArgumentException"> Thrown when comment is invalid.</exception>
             /// <exception cref="System.InvalidOperationException"> Thrown when subsection property is set to true.</exception>
@@ -1706,6 +1764,34 @@ namespace EchoCapture.Data.File.Text{
                 this.sections[subsection].parsedLines.Add(newLine);
 
                 return true;
+            }
+            
+            /// <summary> Add an empty ini line at the index specified.</summary>
+            /// <param name="index"> The index to add the empty line.</param>
+            /// <remarks> This method is used to create new empty line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            public void AddEmptyLine(int index){
+                this.parsedLines.Insert(index, IniLine.EmptyIniLine);
+            }
+
+            /// <summary> Add an empty ini line at the end.</summary>
+            public void AddEmptyLineAtEnd(){
+                this.parsedLines.Add(IniLine.EmptyIniLine);
+            }
+
+            /// <summary> Add an empty ini line at the index specified, in a subsection.</summary>
+            /// <param name="index"> The index to add the empty line.</param>
+            /// <param name="subsection"> The name of the subsection.</param>
+            /// <remarks> This method is used to create new empty line and then insert it in-between other lines. Specifying
+            /// an index beyond the capacity will update the index automatically to the last.</remarks>
+            public void AddEmptyLine(string subsection, int index){
+                this.sections[subsection].parsedLines.Insert(index, IniLine.EmptyIniLine);
+            }
+
+            /// <summary> Add an empty ini line at the end, in a subsection.</summary>
+            /// <param name="subsection"> The name of the subsection.</param>
+            public void AddEmptyLineAtEnd(string subsection){
+                this.sections[subsection].parsedLines.Add(IniLine.EmptyIniLine);
             }
             
 
@@ -1990,12 +2076,11 @@ namespace EchoCapture.Data.File.Text{
                 return this.sections.Remove(name);
             }
             
-            //to-do: maybe remove
-            /// <summary> Try to get the subsection and passed it as reference.</summary>
+            /// <summary> Check for existance of subsection.</summary>
             /// <param name="name"> The name of the subsection header.</param>
             /// <returns> True if found.</returns>
-            private bool RetrieveSubsection(string name, out ParsedIni subsection){
-                return this.sections.TryGetValue(name, out subsection);
+            public bool SubsectionExists(string name){
+                return this.sections.ContainsKey(name);
             }
 
 
@@ -2060,7 +2145,7 @@ namespace EchoCapture.Data.File.Text{
 
         /// <summary> Structure representing a line in an ini file.</summary>
         public struct IniLine{
-            
+
             /// <summary> The full parsed line.</summary>
             private string line;
 
@@ -2082,6 +2167,18 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> The type of this line.</summary>
             private IniLineType? lineType;
+
+            /// <summary> (Get only) Returns an empty ini line.</summary>
+            public static IniLine EmptyIniLine{
+                get{
+                    //create instance
+                    IniLine line = new IniLine();
+
+                    line.lineType = IniLineType.EmptyLine;
+
+                    return line;
+                }
+            }
 
 
             /// <inheritdoc cref="EchoCapture.Data.File.Text.IniFile.IniLine.line"/>
@@ -2152,6 +2249,7 @@ namespace EchoCapture.Data.File.Text{
             }
 
             /// <summary> Create instance from parsing the line and estimating the value type.</summary>
+            /// <remarks> Passed "" or " " for an empty ini line.</remarks>
             /// <exception cref="System.ArgumentException"> Thrown when <paramref name="valueType"/> is invalid.</exception>
             public IniLine(string line) : this(){
                 //hold the value type
@@ -2161,7 +2259,7 @@ namespace EchoCapture.Data.File.Text{
                     //get type
                     valueType = IniLine.EstimateType(line);
                 } catch (IniLineDataParsingException){
-                    if(IniLine.IsFullyCommented(line) || IniLine.IsHeader(line)){
+                    if(IniLine.IsFullyCommented(line) || IniLine.IsHeader(line) || IniLine.IsEmptyLine(line)){
                         valueType = null;
                     } else {
                         throw new ArgumentException("Failed to retrieve the value type of the key-value line.");
@@ -2193,6 +2291,12 @@ namespace EchoCapture.Data.File.Text{
             private void ParseLine(string line){
                 //update reference
                 this.line = line;
+
+                if(String.IsNullOrWhiteSpace(line)){
+                    this.lineType = IniLineType.EmptyLine;
+                    
+                    return;
+                }
 
                 //split into two part; one for key and the other value
                 //and trim whitespace
@@ -2901,6 +3005,11 @@ namespace EchoCapture.Data.File.Text{
             /// <summary> Estimate the type of the value for a key-value line.</summary>
             /// <exception cref="EchoCapture.Exceptions.Data.IniFile.IniLineDataParsingException"> Thrown when line isn't a key-value line.</exception>
             private static Type EstimateType(string line){
+                //empty line
+                if(String.IsNullOrWhiteSpace(line)){
+                    throw new IniLineDataParsingException();
+                }
+
                 //split into two part; one for key and the other value
                 //and trim whitespace
                 string[] part = line.Split(IniFile.SELECTOR, 2, StringSplitOptions.TrimEntries);
@@ -2979,6 +3088,11 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Determine if line is a proper section header.</summary>
             private static bool IsHeader(string line){
+                //empty line
+                if(String.IsNullOrWhiteSpace(line)){
+                    return false;
+                }
+
                 //determine if it's a section header
                 bool? isSectionHeader = null;
 
@@ -2997,7 +3111,6 @@ namespace EchoCapture.Data.File.Text{
                             //get section header
                             string part = line.Substring(1, endSectionCharIndex-1);
 
-                            part.Dump();
                             //invalid section header
                             if(part.Contains('\n')){
                                 return false;
@@ -3036,6 +3149,11 @@ namespace EchoCapture.Data.File.Text{
 
             /// <summary> Determine if line is fully commented.</summary>
             private static bool IsFullyCommented(string line){
+                //empty line
+                if(String.IsNullOrWhiteSpace(line)){
+                    return false;
+                }
+
                 //loop through comment chars
                 for(int i = 0; i < IniFile.COMMENT_CHARS.Length; i++){
                     if(line[0] == IniFile.COMMENT_CHARS[i]){
@@ -3046,6 +3164,8 @@ namespace EchoCapture.Data.File.Text{
                 return false;
             }
 
+            /// <summary> Determine if an empty ini line.</summary>
+            private static bool IsEmptyLine(string line) => String.IsNullOrWhiteSpace(line);
 
             /// <summary> Reconstructed the line and return it.</summary>
             /// <remarks> It's not the raw line. Break line, tab, etc... are represented in the escaped form.</remarks>
@@ -3080,6 +3200,9 @@ namespace EchoCapture.Data.File.Text{
                         }
 
                         return keyConstructedLine;
+
+                    case IniLineType.EmptyLine:
+                        return string.Empty;
 
                     default:
                         //invalid line
@@ -3116,7 +3239,12 @@ namespace EchoCapture.Data.File.Text{
         /// <summary> Defines a fully commented line.</summary>
         FullyCommented,
 
+        /// <summary> Defines an empty line.</summary>
+        EmptyLine,
+
         /// <summary> Defines an invalid line.</summary>
         Invalid
     }
 }
+
+//to-do: fix String.EmptyOrNull with the other one
