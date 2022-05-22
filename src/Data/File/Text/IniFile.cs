@@ -1228,8 +1228,14 @@ namespace EchoCapture.Data.File.Text{
                     }
                 }
 
+                //update index
+                if(index > this.parsedLines.Capacity){
+                    index = this.parsedLines.Count;
+                }
+
                 //create line
                 IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value);
+
                 //insert line
                 this.parsedLines.Insert(index, newLine);
 
@@ -1284,8 +1290,14 @@ namespace EchoCapture.Data.File.Text{
                     }
                 }
 
+                //update index
+                if(index > this.parsedLines.Capacity){
+                    index = this.parsedLines.Count;
+                }
+
                 //create line
                 IniLine newLine = IniLine.CreateKeyValueLine<T>(keyName, value, inlineComment);
+
                 //insert line
                 this.parsedLines.Insert(index, newLine);
 
@@ -1341,6 +1353,11 @@ namespace EchoCapture.Data.File.Text{
                             return false;
                         }
                     }
+                }
+
+                //update index
+                if(index > this.sections[subsection].parsedLines.Capacity){
+                    index = this.sections[subsection].parsedLines.Count;
                 }
 
                 //create line
@@ -1409,6 +1426,11 @@ namespace EchoCapture.Data.File.Text{
                             return false;
                         }
                     }
+                }
+
+                //update index
+                if(index > this.sections[subsection].parsedLines.Capacity){
+                    index = this.sections[subsection].parsedLines.Count;
                 }
 
                 //create line
@@ -1484,7 +1506,7 @@ namespace EchoCapture.Data.File.Text{
                     throw new ArgumentNullException("inlineComment", "New inline comment cannot be null or an empty string.");
                 }
                 if(!IniLine.ValidateComment(inlineComment)){
-                    throw new ArgumentException("Inline comment cannot contain line break char.", "inlineComment");
+                    throw new ArgumentException("Inline comment possibly contain line break char.", "inlineComment");
                 }
 
                 //get type
@@ -1658,6 +1680,11 @@ namespace EchoCapture.Data.File.Text{
                     throw new ArgumentException("Comment is invalid. Possible cause is contains line break char.", "comment");
                 }
 
+                //update index
+                if(index > this.parsedLines.Capacity){
+                    index = this.parsedLines.Count;
+                }
+
                 //create comment line
                 IniLine newLine = IniLine.CreateCommentLine(comment);
                 //add line to the end
@@ -1695,6 +1722,11 @@ namespace EchoCapture.Data.File.Text{
                 //subsection does not exists
                 if(!sections.ContainsKey(subsection)){
                     return false;
+                }
+
+                //update index
+                if(index > this.sections[subsection].parsedLines.Capacity){
+                    index = this.sections[subsection].parsedLines.Count;
                 }
 
                 //create comment line
@@ -1771,6 +1803,11 @@ namespace EchoCapture.Data.File.Text{
             /// <remarks> This method is used to create new empty line and then insert it in-between other lines. Specifying
             /// an index beyond the capacity will update the index automatically to the last.</remarks>
             public void AddEmptyLine(int index){
+                //update index
+                if(index > this.parsedLines.Capacity){
+                    index = this.parsedLines.Count;
+                }
+
                 this.parsedLines.Insert(index, IniLine.EmptyIniLine);
             }
 
@@ -1785,6 +1822,11 @@ namespace EchoCapture.Data.File.Text{
             /// <remarks> This method is used to create new empty line and then insert it in-between other lines. Specifying
             /// an index beyond the capacity will update the index automatically to the last.</remarks>
             public void AddEmptyLine(string subsection, int index){
+                //update index
+                if(index > this.sections[subsection].parsedLines.Capacity){
+                    index = this.sections[subsection].parsedLines.Count;
+                }
+
                 this.sections[subsection].parsedLines.Insert(index, IniLine.EmptyIniLine);
             }
 
@@ -2423,7 +2465,7 @@ namespace EchoCapture.Data.File.Text{
                         }
 
                         //update parts
-                        valuePart = part[1].Substring(0, charIndex);
+                        valuePart = part[1].Substring(0, charIndex).TrimEnd();
                         commentPart = part[1].Substring(charIndex);
                         break;
                     }
@@ -2681,7 +2723,7 @@ namespace EchoCapture.Data.File.Text{
                 }
                 
                 //update line
-                line.line = $"{key} = {stringValue} {IniFile.ALT_COMMENT.ToString()}{inlineComment}";
+                line.line = $"{key} = {stringValue} {inlineComment}";
 
                 //return instance
                 return line;
@@ -2812,7 +2854,7 @@ namespace EchoCapture.Data.File.Text{
                 }
 
                 //hold the constructed line
-                string keyConstructedLine = $"{this.key} = {this.value.ToString()} {IniFile.ALT_COMMENT.ToString()}{inlineComment}";
+                string keyConstructedLine = $"{this.key} = {this.value.ToString()} {inlineComment}";
 
                 //update with new line
                 this.line = keyConstructedLine;
@@ -3045,7 +3087,7 @@ namespace EchoCapture.Data.File.Text{
                         }
 
                         //update parts
-                        valuePart = part[1].Substring(0, charIndex);
+                        valuePart = part[1].Substring(0, charIndex).TrimEnd();
                         commentPart = part[1].Substring(charIndex);
                         break;
                     }
