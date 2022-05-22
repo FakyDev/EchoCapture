@@ -18,7 +18,8 @@ namespace EchoCapture.Data{
         /// <summary> Hold the instance of the application data file.</summary>
         private static JsonFile<Setting> dataFile;
 
-        public static IniFile pngConfigFile;
+        /// <summary> Hold the file, containing the image quality presets.</summary>
+        private static IniFile imagePresetConfigFile = null;
 
         /// <summary> (Get only) Return setting with default values.</summary>
         private static Setting DefaultConfig{
@@ -101,8 +102,8 @@ namespace EchoCapture.Data{
 
             //validate application data file
             ApplicationData.ValidateDataFile();
-            //validate png quality setting
-            ApplicationData.ValidatePngQualityConfig();
+            //validate jpeg quality setting
+            ApplicationData.ValidateImageQualityConfig();
             //update log file
             ApplicationData.UpdateLogFile();
 
@@ -304,10 +305,11 @@ namespace EchoCapture.Data{
             }
         }
 
-        //to-do: add summary
-        private static void ValidatePngQualityConfig(){
+        
+        /// <summary> Validates the image quality presets and try to repair them.</summary>
+        private static void ValidateImageQualityConfig(){
             //create instance
-            ApplicationData.pngConfigFile = new IniFile("pngQuality", ApplicationData.ImageConfigFolder);
+            ApplicationData.imagePresetConfigFile = new IniFile("imageQuality", ApplicationData.ImageConfigFolder);
 
             //will hold the file stream
             System.IO.FileStream fs = null;
@@ -318,44 +320,52 @@ namespace EchoCapture.Data{
             bool finishedPerformingCorrection = false;
             try{
                 //success if file wasn't existant
-                if(ApplicationData.pngConfigFile.CreateFile(out fs)){
+                if(ApplicationData.imagePresetConfigFile.CreateFile(out fs)){
                     //try to set to a default config
                     try{
-                        ApplicationData.ResetPngQualityConfig(ApplicationData.pngConfigFile, fs);
+                        ApplicationData.ResetImageQualityConfig(ApplicationData.imagePresetConfigFile, fs);
                     } catch (OverwritingDataFileException e){
                         //notify even though debug mode is disable
                         if(!Debug.IsDebug){
-                            Debug.Error("Failure of setting up png quality config, after file creation.");
+                            Debug.Error("Failure of setting up image quality preset config, after file creation.");
                         }
                         //log and error messaged it if debug is enable
-                        Debug.DebugError("Failure of setting up png quality config, after file creation.");
+                        Debug.DebugError("Failure of setting up image quality preset config, after file creation.");
 
-                        throw new OverwritingDataFileException("Failure of setting up png quality config, after file creation.", e);
+                        throw new OverwritingDataFileException("Failure of setting up image quality preset config, after file creation.", e);
+                    }
+
+                    //notify user that image quality config file is created
+                    System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog("Image quality preset config has been created.");
+                    //if debug is on
+                    if(Debug.IsDebug){
+                        Console.WriteLine("Image quality preset config has been created.");
+                        Debug.SkipLine();
                     }
 
                 //exsting file
                 //check if data is correct
-                } else if(ApplicationData.pngConfigFile.FileExists){
+                } else if(ApplicationData.imagePresetConfigFile.FileExists){
                     //on failure to load parsed ini
-                    if(!ApplicationData.pngConfigFile.Load()){
+                    if(!ApplicationData.imagePresetConfigFile.Load()){
                         //try to set to a default config
                         try{
-                            ApplicationData.ResetPngQualityConfig(ApplicationData.pngConfigFile, fs);
+                            ApplicationData.ResetImageQualityConfig(ApplicationData.imagePresetConfigFile, fs);
                         } catch (OverwritingDataFileException e){
                             //notify even though debug mode is disable
                             if(!Debug.IsDebug){
-                                Debug.Error("Failure of fixing png quality config.");
+                                Debug.Error("Failure of fixing image quality preset config.");
                             }
                             //log and error messaged it if debug is enable
-                            Debug.DebugError("Failure of fixing png quality config.");
+                            Debug.DebugError("Failure of fixing image quality preset config.");
 
-                            throw new OverwritingDataFileException("Failure of fixing png quality config.", e);
+                            throw new OverwritingDataFileException("Failure of fixing image quality preset config.", e);
                         }
                     }
                     //update state
                     performingCorrection = true;
                     //correct invalid values
-                    ApplicationData.CorrectPngQualityConfig();
+                    ApplicationData.CorrectImageQualityConfig();
                     //update state
                     finishedPerformingCorrection = true;
                 } else {
@@ -372,19 +382,19 @@ namespace EchoCapture.Data{
                 if(performingCorrection && !finishedPerformingCorrection){
                     //notify even though debug mode is disable
                     if(!Debug.IsDebug){
-                        Debug.Error("Failure of saving png quality config, on fixing invalid values.");
+                        Debug.Error("Failure of saving image quality preset config, on fixing invalid values.");
                     }
                     //log and error messaged it if debug is enable
-                    Debug.DebugError("Failure of saving png quality config, on fixing invalid values.");
+                    Debug.DebugError("Failure of saving image quality preset config, on fixing invalid values.");
                 }
             }
         }
 
-        /// <summary> Set the contents of an ini file to a default png quality config.</summary>
+        /// <summary> Set the contents of an ini file to a default image quality preset config.</summary>
         /// <remarks> Free resources after use.</remarks>
         /// <param name="iniFile"> The ini file instance to use.</param>
-        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save default png quality config.</exception>
-        private static void ResetPngQualityConfig(IniFile iniFile){
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save default image quality preset config.</exception>
+        private static void ResetImageQualityConfig(IniFile iniFile){
             //default to empty ini
             iniFile.Emptify();
 
@@ -399,9 +409,15 @@ namespace EchoCapture.Data{
             iniFile.Parsed_ini.AddEmptyLine(7);
             iniFile.Parsed_ini.AddLineComment("You're free to modify values.", 8);
             iniFile.Parsed_ini.AddEmptyLine(9);
-
-            //add the preset using
-            iniFile.Parsed_ini.AddValueAtEnd<string>("selectedPreset", PngQualitySetting.DefaultChoosenPreset);
+            //add preset using
+            iniFile.Parsed_ini.AddLineComment("The preset to use.", 10);
+            iniFile.Parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
+            //add image rescaling
+            iniFile.Parsed_ini.AddEmptyLine(12);
+            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 13);
+            iniFile.Parsed_ini.AddValueAtEnd<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "True or False (case-sensitive)");
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
             iniFile.Parsed_ini.AddEmptyLineAtEnd();
 
             //defines presets
@@ -411,23 +427,22 @@ namespace EchoCapture.Data{
             for (int i = 0; i < subsecions.Length; i++){
                 //create subsection and add values
                 iniFile.Parsed_ini.CreateSubsection(subsecions[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", PngQualitySetting.DefaultPixelFormats[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<int>(subsecions[i], "imageQuality", PngQualitySetting.DefaultQualityLevels[i]);
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
                 iniFile.Parsed_ini.AddEmptyLineAtEnd(subsecions[i]);
             }
 
-            if(!pngConfigFile.Save()){
+            if(!imagePresetConfigFile.Save()){
                 //throw exception
-                throw new OverwritingDataFileException("Failure of saving default png quality config.");
+                throw new OverwritingDataFileException("Failure of saving default image quality preset config.");
             }
         }
 
-        /// <summary> Set the contents of an ini file to a default png quality config.</summary>
+        /// <summary> Set the contents of an ini file to a default image quality preset config.</summary>
         /// <remarks> Free resources after use.</remarks>
         /// <param name="iniFile"> The ini file instance to use.</param>
         /// <param name="fs"> The filestream to use to update the file.</param>
-        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save default png quality config.</exception>
-        private static void ResetPngQualityConfig(IniFile iniFile, System.IO.FileStream fs){
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save default image quality preset config.</exception>
+        private static void ResetImageQualityConfig(IniFile iniFile, System.IO.FileStream fs){
             //default to empty ini
             iniFile.Emptify();
 
@@ -442,9 +457,15 @@ namespace EchoCapture.Data{
             iniFile.Parsed_ini.AddEmptyLine(7);
             iniFile.Parsed_ini.AddLineComment("You're free to modify values.", 8);
             iniFile.Parsed_ini.AddEmptyLine(9);
-
-            //add the preset using
-            iniFile.Parsed_ini.AddValueAtEnd<string>("selectedPreset", PngQualitySetting.DefaultChoosenPreset);
+            //add preset using
+            iniFile.Parsed_ini.AddLineComment("The preset to use.", 10);
+            iniFile.Parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
+            //add image rescaling
+            iniFile.Parsed_ini.AddEmptyLine(12);
+            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 13);
+            iniFile.Parsed_ini.AddValueAtEnd<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "#True or False (case-sensitive)");
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
             iniFile.Parsed_ini.AddEmptyLineAtEnd();
 
             //defines presets
@@ -454,28 +475,27 @@ namespace EchoCapture.Data{
             for (int i = 0; i < subsecions.Length; i++){
                 //create subsection and add values
                 iniFile.Parsed_ini.CreateSubsection(subsecions[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", PngQualitySetting.DefaultPixelFormats[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<int>(subsecions[i], "imageQuality", PngQualitySetting.DefaultQualityLevels[i]);
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
                 iniFile.Parsed_ini.AddEmptyLineAtEnd(subsecions[i]);
             }
 
-            if(!pngConfigFile.Save(fs)){
+            if(!imagePresetConfigFile.Save(fs)){
                 //throw exception
-                throw new OverwritingDataFileException("Failure of saving default png quality config.");
+                throw new OverwritingDataFileException("Failure of saving default image quality preset config.");
             }
         }
 
-        /// <summary> Correct invalid value(s) in an ini file representing png quality config to default value.</summary>
+        /// <summary> Correct invalid value(s) in an ini file representing jpeg quality config to default value.</summary>
         /// <remarks> Should use <see cref="EchoCapture.Data.File.Text.IniFile.Load"/> beforehand. Free resources after use.</remarks>
         /// <param name="iniFile"> The ini file instance to use.</param>
-        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save png quality config, on fixing incorrect values</exception>
-        private static void CorrectPngQualityConfig(){
+        /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"> Thrown on failure to save jpeg quality config, on fixing incorrect values</exception>
+        private static void CorrectImageQualityConfig(){
             //note: assuming already loaded
 
             //determine if file was updated
             bool hasUpdatedSomething = false;
             //reference to the parsed ini
-            IniFile.ParsedIni parsed_ini = ApplicationData.pngConfigFile.Parsed_ini;
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
 
             //valid subsections, also presets
             string[] subsections = new string[3]{"high", "standard", "low"};
@@ -498,21 +518,97 @@ namespace EchoCapture.Data{
 
                     //defaults the value of choosen preset
                     if(!validPresetValue){
-                        parsed_ini.SetValue<string>("selectedPreset", PngQualitySetting.DefaultChoosenPreset);
+                        parsed_ini.SetValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset);
+                        //update state
+                        hasUpdatedSomething = true;
                     }
                 //value dont exists
                 } else {
                     //add value
-                    parsed_ini.AddValueAtEnd<string>("selectedPreset", PngQualitySetting.DefaultChoosenPreset);
+                    parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
+                    //update state
+                    hasUpdatedSomething = true;
                 }
 
             //value type is invalid
             } catch(IniLineDataParsingException){
-                parsed_ini.SetValueIgnoringType<string>("selectedPreset", PngQualitySetting.DefaultChoosenPreset);
+                parsed_ini.SetValueIgnoringType<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset);
                 //update state
                 hasUpdatedSomething = true;
             }
 
+            //hold the image rescaling state
+            bool imageRescaling;
+            try{
+                //check if doesn't exists
+                if(!parsed_ini.SearchValue<bool>("rescaleImage", out imageRescaling)){
+                    //add value
+                    parsed_ini.AddValue<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, 14, "#True or False (case-sensitive)");
+                    //update state
+                    hasUpdatedSomething = true;
+                }
+
+            //value type is invalid
+            } catch(IniLineDataParsingException){
+                parsed_ini.SetValueIgnoringType<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "#True or False (case-sensitive)");
+                //update state
+                hasUpdatedSomething = true;
+            }
+
+            //hold the image rescaling value
+            int[] newImageResolution = new int[2];
+            try{
+                //determine if retrived or not
+                bool retrivedWidth;
+                bool retrivedHeight;
+                
+                //retrive the new width dimension and get result
+                retrivedWidth = parsed_ini.SearchValue<int>("newWidthDimension", out newImageResolution[0]);
+
+                //retrive the new width dimension and get result
+                retrivedHeight = parsed_ini.SearchValue<int>("newHeightDimension", out newImageResolution[1]);
+
+                //retrieved both
+                if(retrivedHeight && retrivedWidth){
+                    //invalid range
+                    if(newImageResolution[0] <= 0f || newImageResolution[1] <= 0f){
+                        //update
+                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                        //update state
+                        hasUpdatedSomething = true;
+                    }
+
+                //failed to retrieve both
+                } else if(!retrivedHeight && !retrivedWidth){
+                    //update
+                    parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                    parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                    //update state
+                    hasUpdatedSomething = true;
+                } else {
+                    //update
+                    if(retrivedWidth){
+                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                    } else {
+                        parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                    }
+                    //update
+                    if(retrivedHeight){
+                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                    } else {
+                        parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                    }
+                    //update state
+                    hasUpdatedSomething = true;
+                }
+            } catch(IniLineDataParsingException){
+                parsed_ini.SetValueIgnoringType<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                parsed_ini.SetValueIgnoringType<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                //update state
+                hasUpdatedSomething = true;
+            }
+            
             //check if all subsections exists
             //and fix it
             for (int i = 0; i < subsections.Length; i++){
@@ -522,7 +618,7 @@ namespace EchoCapture.Data{
                 }
 
                 //create subsection along with values
-                parsed_ini.CreateSubsection(subsections[i], new string[2]{$"pixelFormat = {PngQualitySetting.DefaultPixelFormats[i]}", $"imageQuality = {PngQualitySetting.DefaultQualityLevels[i]}"});
+                parsed_ini.CreateSubsection(subsections[i], new string[1]{$"pixelFormat = {ImageQualityPresetSetting.DefaultPixelFormats[i]}"});
                 //update state
                 hasUpdatedSomething = true;
             }
@@ -535,98 +631,71 @@ namespace EchoCapture.Data{
                     //exists, correct value type but might be invalid value
                     if(parsed_ini.SearchValue<string>(subsections[i], "pixelFormat", out pixelFormatValue)){
                         //invalid pixel format
-                        if(!PngQualitySetting.ValidDefaultPixelFormat.Contains(pixelFormatValue)){
-                            parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", PngQualitySetting.DefaultPixelFormats[i], false);
+                        if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormatValue)){
+                            parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], false);
                             //update state
                             hasUpdatedSomething = true;
                         }
 
                     //non-existant
                     } else {
-                        parsed_ini.AddValueInSubsectionAtEnd<string>(subsections[i], "pixelFormat", PngQualitySetting.DefaultPixelFormats[i]);
+                        parsed_ini.AddValueInSubsectionAtEnd<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
                         //update state
                         hasUpdatedSomething = true;
                     }
                 } catch (IniLineDataParsingException){
-                    parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", PngQualitySetting.DefaultPixelFormats[i], false);
+                    parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], false);
                     //update state
                     hasUpdatedSomething = true;
                 }
             }
 
-            //loop through subsection to check for correct data type of quality level
-            int imageQuality;
-            for (int i = 0; i < subsections.Length; i++){
-                //exception on invalid value type
-                try{
-                    //exists, correct value type but might be invalid value
-                    if(parsed_ini.SearchValue<int>(subsections[i], "imageQuality", out imageQuality)){
-                        //invalid range
-                        if(!PngQualitySetting.QualityRange.Contains(imageQuality)){
-                            parsed_ini.SetValueIgnoringType<int>(subsections[i], "imageQuality", PngQualitySetting.DefaultQualityLevels[i], false);
-                            //update state
-                            hasUpdatedSomething = true;
-                        }
-
-                    //non-existant
-                    } else {
-                        parsed_ini.AddValueInSubsectionAtEnd<int>(subsections[i], "imageQuality", PngQualitySetting.DefaultQualityLevels[i]);
-                        //update state
-                        hasUpdatedSomething = true;
-                    }
-                } catch (IniLineDataParsingException){
-                    parsed_ini.SetValueIgnoringType<int>(subsections[i], "imageQuality", PngQualitySetting.DefaultQualityLevels[i], false);
-                    //update state
-                    hasUpdatedSomething = true;
-                }
-            }
-
-            if(!ApplicationData.pngConfigFile.Save()){
+            if(!ApplicationData.imagePresetConfigFile.Save()){
                 //throw exception
-                throw new OverwritingDataFileException("Failure of saving png quality config, on fixing invalid values.");
+                throw new OverwritingDataFileException("Failure of saving image quality preset config, on fixing invalid values.");
             }
 
             //log
             if(hasUpdatedSomething){
-                Debug.DebugWarning("Some value(s) of the Png Quality Config, has been set to its default value as previous values was invalid.");
+                Debug.DebugWarning("Some value(s) of the Image Quality Preset Config, has been set to its default value as previous values was invalid.");
             }
         }
 
         /// <summary> Reloads the object representing the ini file.</summary>
-        public static void RefreshPngQualityConfig(){
+        public static void RefreshImageQualityConfig(){
             //reload
             //on failed to reload
-            if(!ApplicationData.pngConfigFile.Load()){
+            if(!ApplicationData.imagePresetConfigFile.Load()){
                 //try to set to a default config
                 try{
-                    ApplicationData.ResetPngQualityConfig(ApplicationData.pngConfigFile);
+                    ApplicationData.ResetImageQualityConfig(ApplicationData.imagePresetConfigFile);
                 } catch (OverwritingDataFileException e){
                     //notify even though debug mode is disable
                     if(!Debug.IsDebug){
-                        Debug.Error("Failure of fixing png quality config.");
+                        Debug.Error("Failure of fixing image quality preset config.");
                     }
                     //log and error messaged it if debug is enable
-                    Debug.DebugError("Failure of fixing png quality config.");
+                    Debug.DebugError("Failure of fixing image quality preset config.");
 
-                    throw new OverwritingDataFileException("Failure of fixing png quality config.", e);
+                    throw new OverwritingDataFileException("Failure of fixing image quality preset config.", e);
                 }
             }
             
             try{
                 //correct invalid values
-                ApplicationData.CorrectPngQualityConfig();
+                ApplicationData.CorrectImageQualityConfig();
             } catch (OverwritingDataFileException){
                 //notify even though debug mode is disable
                 if(!Debug.IsDebug){
-                    Debug.Error("Failure of saving png quality config, on fixing invalid values during refreshing.");
+                    Debug.Error("Failure of saving image quality preset config, on fixing invalid values during refreshing.");
                 }
                 //log and error messaged it if debug is enable
-                Debug.DebugError("Failure of saving png quality config, on fixing invalid values during refreshing.");
+                Debug.DebugError("Failure of saving image quality preset config, on fixing invalid values during refreshing.");
             }
         }
 
-        /// <summary> Reads the ini file containing png quality config, and return it in an object representing png quality setting.</summary>
-        public static PngQualitySetting GetPngQualityData() => new PngQualitySetting(ApplicationData.pngConfigFile);
+        /// <summary> Reads the ini file containing jpeg quality config, and return it in an object representing jpeg quality setting.</summary>
+        public static ImageQualityPresetSetting GetImageQualityData() => new ImageQualityPresetSetting(ApplicationData.imagePresetConfigFile);
 
 
         /// <summary> Update the log with <paramref name="text"/>.</summary>
@@ -745,19 +814,18 @@ namespace EchoCapture.Data{
             }
         }
 
-        /// <summary> Object representing an png quality setting/config.</summary>
-        public struct PngQualitySetting{
+        /// <summary> Object representing an image quality preset setting.</summary>
+        public struct ImageQualityPresetSetting{
             
-            /// <summary> Default pixel formats set in a png quality config.</summary>
+            /// <summary> Default pixel formats set in an image quality preset config.</summary>
             /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
             public readonly static string[] DefaultPixelFormats = new string[3]{"Format48bppRgb", "Format32bppRgb", "Format24bppRgb"};
 
-            /// <summary> Default quality level set in a png quality config.</summary>
-            /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
-            public readonly static int[] DefaultQualityLevels = new int[3]{100, 90 , 70};
+            /// <summary> The default image rescaling value in an image quality preset config.</summary>
+            public const bool DefaultRescaling = false;
 
-            /// <summary> The range of valid values for png quality level.</summary>
-            public readonly static IEnumerable<int> QualityRange = Enumerable.Range(0, 101);
+            /// <summary> The default rescaling resolution of a screenshot.</summary>
+            public readonly static int[] DefaultRescalingResolution = new int[2]{1920, 1080};
 
             /// <summary> The default preset that the application will use.</summary>
             public const string DefaultChoosenPreset = "standard";
@@ -770,19 +838,23 @@ namespace EchoCapture.Data{
                 get{
                     //update
                     if(validDefaultPixelFormat == null){
-                        PngQualitySetting.validDefaultPixelFormat = new string[9]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
+                        ImageQualityPresetSetting.validDefaultPixelFormat = new string[9]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
                         "Format32bppPArgb", "Format32bppRgb", "Format48bppRgb", "Format64bppArgb", "Format64bppPArgb"};
                     }
 
-                    return PngQualitySetting.validDefaultPixelFormat;
+                    return ImageQualityPresetSetting.validDefaultPixelFormat;
                 }
             }
             
+
             /// <summary> The pixel format that the preset is set for.</summary>
             private System.Drawing.Imaging.PixelFormat pixelFormat;
 
-            /// <summary> The quality level of the image.</summary>
-            private int qualityLevel;
+            /// <summary> Determine if image rescaling is enable.</summary>
+            private bool enabledRescaling;
+
+            /// <summary> The resolution to rescale the image with.</summary>
+            private int[] rescalingResolution;
 
             /// <summary> (Get only) Returns the pixel format that the preset if set for.</summary>
             public System.Drawing.Imaging.PixelFormat _PixelFormat{
@@ -791,28 +863,40 @@ namespace EchoCapture.Data{
                 }
             }
 
-            /// <summary> (Get only) Return the quality level of the image.</summary>
-            public int QualityLevel{
+            /// <summary> (Get only) Determine if image rescaling is enable.</summary>
+            public bool EnabledRescaling{
                 get{
-                    return this.qualityLevel;
+                    return this.enabledRescaling;
                 }
             }
 
+            /// <summary> (Get only) Return the resolution to rescale the image with.</summary>
+            public int[] RescalingResolution{
+                get{
+                    return this.rescalingResolution;
+                }
+            }
 
-            /// <summary> Creates instance with parameters got from an ini file.</summary>
+            /// <summary> Creates instance with image rescaling enable.</summary>
             /// <param name="pixelFormat"> The name of the in use pixel format, case-sensitive.</param>
-            /// <param name="qualityLevel"> The level of quality for the image. The less it is, more compression there is.</param>
+            /// <param name="newWidth"> The new width of the image dimension.</param>
+            /// <param name="newHeight"> The new height of the image dimension.</param>
             /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
             /// <exception cref="System.ArgumentOutOfRangeException"> The value of qualityLevel was out of range of the valid values for quality.</exception>
-            public PngQualitySetting(string pixelFormat, int qualityLevel){
+            private ImageQualityPresetSetting(string pixelFormat, int newWidth, int newHeight){
                 //check for list of pixel format
-                if(!PngQualitySetting.ValidDefaultPixelFormat.Contains(pixelFormat)){
+                if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormat)){
                     throw new ArgumentException("Argument 1 passed is not from the list of valid pixel formats.", "pixelFormat");
                 }
 
-                //check for range of compression level
-                if(!PngQualitySetting.QualityRange.Contains(qualityLevel)){
-                    throw new ArgumentOutOfRangeException("Argument 2 passed is not in the valid range of quality level.", "qualityLevel");
+                //check for range of new dimension
+                if(newWidth <= 0){
+                    throw new ArgumentOutOfRangeException("Argument 3 passed is invalid. Zero and negative values isn't valid.", "newWidth");
+                }
+
+                //check for range of new dimension
+                if(newHeight <= 0){
+                    throw new ArgumentOutOfRangeException("Argument 3 passed is invalid. Zero and negative values isn't valid.", "newHeight");
                 }
 
                 //parse value to enum and update field
@@ -820,45 +904,73 @@ namespace EchoCapture.Data{
                     throw new ArgumentException("Argument 1 passed has failed to be parsed into an enum.", "pixelFormat");
                 }
 
-                //update compression
-                this.qualityLevel = qualityLevel;
+                //update values
+                this.enabledRescaling = true;
+                this.rescalingResolution = new int[2]{newWidth, newHeight};
+            }
+
+            /// <summary> Creates instance with image rescaling disable.</summary>
+            /// <param name="pixelFormat"> The name of the in use pixel format, case-sensitive.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
+            private ImageQualityPresetSetting(string pixelFormat){
+                //check for list of pixel format
+                if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormat)){
+                    throw new ArgumentException("Argument 1 passed is not from the list of valid pixel formats.", "pixelFormat");
+                }
+
+                //parse value to enum and update field
+                if(!Enum.TryParse<System.Drawing.Imaging.PixelFormat>(pixelFormat, false, out this.pixelFormat)){
+                    throw new ArgumentException("Argument 1 passed has failed to be parsed into an enum.", "pixelFormat");
+                }
+
+                //update values
+                this.enabledRescaling = true;
+                this.rescalingResolution = null;
             }
 
             /// <summary> Creates instance from an ini file.</summary>
             /// <param name="iniFile"> The ini file to search values from.</param>
             /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
-            /// <exception cref="System.ArgumentOutOfRangeException"> The value of qualityLevel was out of range of the valid values for quality.</exception>
-            public PngQualitySetting(IniFile iniFile){
+            /// <exception cref="System.ArgumentOutOfRangeException"> The new image dimension was out of range of the valid dimension.</exception>
+            public ImageQualityPresetSetting(IniFile iniFile){
                 //get parsed ini
-                IniFile.ParsedIni parsed_ini = ApplicationData.pngConfigFile.Parsed_ini;
+                IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
 
-                //hold pixel format and quality retreive from file
+                //hold retrived values from file
                 string presetChose;
+                bool enabledRescaling;
+                int[] newResolution = new int[2];
                 string pixelFormatValue;
-                int qualityLevel;
 
                 //search values
                 parsed_ini.SearchValue<string>("selectedPreset", out presetChose);
+                parsed_ini.SearchValue<bool>("rescaleImage", out enabledRescaling);
+                parsed_ini.SearchValue<int>("newWidthDimension", out newResolution[0]);
+                parsed_ini.SearchValue<int>("newHeightDimension", out newResolution[1]);
                 parsed_ini.SearchValue<string>(presetChose, "pixelFormat", out pixelFormatValue);
-                parsed_ini.SearchValue<int>(presetChose, "imageQuality", out qualityLevel);
 
-                //check for list of pixel format
-                if(!PngQualitySetting.ValidDefaultPixelFormat.Contains(pixelFormatValue)){
-                    throw new ArgumentException("Pixel format is not from the list of valid pixel formats, read from the instance of argument 1.", "iniFile");
-                }
-
-                //check for range of compression level
-                if(!PngQualitySetting.QualityRange.Contains(qualityLevel)){
-                    throw new ArgumentOutOfRangeException("Quality level is not in the range of quality level, read from the instance of argument 1.", "iniFile");
-                }
+                //update states
+                this.enabledRescaling = enabledRescaling;
+                this.rescalingResolution = null;
 
                 //parse value to enum and update field
                 if(!Enum.TryParse<System.Drawing.Imaging.PixelFormat>(pixelFormatValue, false, out this.pixelFormat)){
                     throw new ArgumentException("Failed to parse pixel format into an enum, pixel format read from the instance of argument 1.", "iniFile");
                 }
 
-                //update compression
-                this.qualityLevel = qualityLevel;
+                if(enabledRescaling){
+                    //check for range of new dimension
+                    if(newResolution[0] <= 0){
+                        throw new ArgumentOutOfRangeException("Width dimension is invalid, read from the instance of argument 1. Zero and negative values isn't valid.", "iniFile");
+                    }
+
+                    //check for range of new dimension
+                    if(newResolution[1] <= 0){
+                        throw new ArgumentOutOfRangeException("Height dimension is invalid, read from the instance of argument 1. Zero and negative values isn't valid.", "iniFile");
+                    }
+
+                    this.rescalingResolution = newResolution;
+                }
             }
         }
     }
