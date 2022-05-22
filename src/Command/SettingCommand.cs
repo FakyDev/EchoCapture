@@ -77,6 +77,11 @@ namespace EchoCapture.Command{
                     break;
                 }
             } finally {
+                //contains no arg
+                if(args.Length == 0){
+                    throw new UnknownLineArgumentException(this, "It applies for the current operation you're trying to accomplish.");
+                }
+                //contains additional args
                 if(args[0] == SettingCommand.DISPLAY){
                     //contains additional args
                     if(!excepForDisplay){
