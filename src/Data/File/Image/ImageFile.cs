@@ -10,34 +10,42 @@ using EchoCapture.Data.File.Async;
 namespace EchoCapture.Data.File.Image{
 
     /// <summary> Base class for image files, which supports asynchronous and synchronous file operations.</summary>
-    public class ImageFile : FileBase<Bitmap>, IAsyncFile<Bitmap>{
+    public class ImageFile : FileBase<Bitmap>, IFile<Bitmap>, IAsyncFile<Bitmap>{
         
         /// <summary> The alternate extension of a jpeg image file.</summary>
         private const string ALTERNATE_JPG_EXT = "jpeg";
 
         /// <summary> Hold the image format of the bitmap.</summary>
-        private ImageFormat imageFormat;
+        private ImageFormat imageFormat = null;
 
-        /// <summary> Determine if need to reload to png quality config.</summary>
-        private static bool pngQualitySettingRefresh = false;
+        /// <summary> (Get only) Return the image format of the bitmap.</summary>
+        protected ImageFormat _ImageFormat{
+            get{
+                return this.imageFormat;
+            }
+        }
 
-        /// <summary> Holds the object representing the png quality setting.</summary>
-        private static ApplicationData.PngQualitySetting _pngQualitySetting = default(ApplicationData.PngQualitySetting);
 
-        /// <summary> (Get only) Returns the object representing the png quality setting.</summary>
-        public static ApplicationData.PngQualitySetting _PngQualitySetting{
+        /// <summary> Determine if need to reload to image quality preset config.</summary>
+        private static bool imageQualitySettingRefresh = false;
+
+        /// <summary> Holds the object representing the image quality preset setting.</summary>
+        private static ApplicationData.ImageQualityPresetSetting _imageQualitySetting = default(ApplicationData.ImageQualityPresetSetting);
+
+        /// <summary> (Get only) Returns the object representing the image quality preset setting.</summary>
+        public static ApplicationData.ImageQualityPresetSetting _ImageQualitySetting{
             get{
                 //checks if default
-                if(ImageFile.pngQualitySettingRefresh || ImageFile._pngQualitySetting.Equals(default(ApplicationData.PngQualitySetting))){
+                if(ImageFile.imageQualitySettingRefresh || ImageFile._imageQualitySetting.Equals(default(ApplicationData.ImageQualityPresetSetting))){
                     //refresh and update
-                    ApplicationData.RefreshPngQualityConfig();
-                    ImageFile._pngQualitySetting = ApplicationData.GetPngQualityData();
+                    ApplicationData.RefreshImageQualityConfig();
+                    ImageFile._imageQualitySetting = ApplicationData.GetImageQualityData();
 
                     //update state
-                    ImageFile.pngQualitySettingRefresh = false;
+                    ImageFile.imageQualitySettingRefresh = false;
                 }
 
-                return ImageFile._pngQualitySetting;
+                return ImageFile._imageQualitySetting;
             }
         }
 
@@ -51,7 +59,7 @@ namespace EchoCapture.Data.File.Image{
             if(extension == FileExtension.png){
                 this.imageFormat = ImageFormat.Png;
             } else if(extension == FileExtension.jpg){
-                this.imageFormat = ImageFormat.Png;
+                this.imageFormat = ImageFormat.Jpeg;
             } else {
                 throw new ArgumentException("Parameter 3 is not a valid image file extension.");
             }
@@ -152,26 +160,13 @@ namespace EchoCapture.Data.File.Image{
             }
         }
 
-        /// <summary> Screenshot the entire screen and return in a bitmap object.</summary>
+        /// <summary> Screenshot the entire screen and return in a bitmap object, with pixel format specified in setting.</summary>
         /// <remarks> You may want to clear resources.</remarks>
-        public static Bitmap Screenshot(FileExtension fileExtension){
-            //chooses the pixelFormat to use
-            PixelFormat pixelFormat;
-            if(fileExtension == FileExtension.png){
-                pixelFormat = ImageFile._PngQualitySetting._PixelFormat;
-            } else if(fileExtension == FileExtension.jpg){
-                pixelFormat = ImageFile._PngQualitySetting._PixelFormat;
-            } else {
-                //to-do: update
-                throw new Exception();
-            }
+        public static Bitmap Screenshot(){
             //get the bounds of the screen
             Rectangle bounds = Screen.GetBounds(Point.Empty);
 
-            //create bitmap, with screen size
-            //Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, pixelFormat);
-
-            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, pixelFormat);
+            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height, ImageFile._ImageQualitySetting._PixelFormat);
 
             //create a graphics object from the bitmap
             using(Graphics captureGraphics = Graphics.FromImage(bmp)){
@@ -183,6 +178,32 @@ namespace EchoCapture.Data.File.Image{
             return bmp;
         }
 
+        /// <summary> Screenshot the entire screen and return in a bitmap object, with pixel format specified in setting, and rescale to 
+        /// specified dimension in settings, if enabled.</summary>
+        /// <remarks> You may want to clear resources. If image rescaling is disabled, normal screenshot will be used.</remarks>
+        public static Bitmap RescaleScreenshot(){
+            //hold the capture screen
+            Bitmap screenshot = null;
+            try{
+                //capture screen
+                screenshot = ImageFile.Screenshot();
+
+                //rescale disable
+                if(!ImageFile._ImageQualitySetting.EnabledRescaling){
+                    return screenshot;
+                }
+
+                //return rescaled bitmap
+                return new Bitmap(screenshot, ImageFile._ImageQualitySetting.RescalingResolution[0], ImageFile._ImageQualitySetting.RescalingResolution[0]);
+
+            } finally {
+                //dispose old bitmap
+                if(ImageFile._ImageQualitySetting.EnabledRescaling){
+                    screenshot?.Dispose();
+                }
+            }
+        }
+
         /// <summary> Determine if the extension is an image extension.</summary>
         public static bool ValidateImageExtension(FileExtension imageExtension){
             if(imageExtension == FileExtension.jpg || imageExtension == FileExtension.png){
@@ -192,9 +213,9 @@ namespace EchoCapture.Data.File.Image{
             return false;
         }
 
-        /// <summary> Allows to reload the png quality setting, next time that png quality setting are fetched.</summary>
-        public static void QueueForPngQualitySettingRefresh(){
-            ImageFile.pngQualitySettingRefresh = true;
+        /// <summary> Queues to reload data from the image quality preset file and refreshes processes relating to it.</summary>
+        public static void QueueForImageQualitySettingRefresh(){
+            ImageFile.imageQualitySettingRefresh = true;
         }
 
 
@@ -256,7 +277,7 @@ namespace EchoCapture.Data.File.Image{
     
         /// <summary> Overwrites the existing image file asynchronously.</summary>
         /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists.</exception>
-        public async Task OverwriteFileAsync(Bitmap value){
+        public virtual async Task OverwriteFileAsync(Bitmap value){
             //file doesn't exists
             if(!this.FileExists){
                 //throw exception
@@ -283,7 +304,7 @@ namespace EchoCapture.Data.File.Image{
         /// <summary> Overwrites the existing image file asynchronously, with filestream provided.</summary>
         /// <remarks> Make sure to free resource after.</remarks>
         /// <exception cref="System.InvalidOperationException"> Thrown when file doesn't exists, or filestream is invalid.</exception>
-        public async Task OverwriteFileAsync(FileStream fs, Bitmap value){
+        public virtual async Task OverwriteFileAsync(FileStream fs, Bitmap value){
             //file doesn't exists
             if(!this.FileExists){
                 //throw exception
@@ -300,10 +321,8 @@ namespace EchoCapture.Data.File.Image{
             Byte[] convertedBmp;
             //convert the bitmap
             using(MemoryStream ms = new MemoryStream()){
-                //Encoder.Quality;
-                //EncoderValue.CompressionRle
                 //save to stream
-                value.Save(ms, ImageFormat.Png);
+                value.Save(ms, this.imageFormat);
                 //get value
                 convertedBmp = ms.ToArray();
             }
