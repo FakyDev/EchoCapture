@@ -161,7 +161,7 @@ namespace EchoCapture.Command{
                 //update token source
                 this.cancelTokenSource = new CancellationTokenSource();
                 //refresh png quality setting
-                ImageFile.QueueForPngQualitySettingRefresh();
+                ImageFile.QueueForImageQualitySettingRefresh();
                 //start work
                 this.work = this.ExecuteWork(this.cancelTokenSource.Token, (int)delay, (FileExtension)imageExtension);
 
@@ -261,7 +261,7 @@ namespace EchoCapture.Command{
                 System.IO.FileStream fs;
 
                 //screenshot
-                using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
+                using(System.Drawing.Bitmap bmp = ImageFile.RescaleScreenshot()){
                     //create file
                     if(file.CreateFileAsync(out fs)){
                         try{
@@ -316,7 +316,7 @@ namespace EchoCapture.Command{
                 }
             } else {
                 //screenshot
-                using(System.Drawing.Bitmap bmp = PngFile.Screenshot()){
+                using(System.Drawing.Bitmap bmp = ImageFile.RescaleScreenshot()){
                     try{
                         //save screenshot
                         await file.OverwriteFileAsync(bmp);
