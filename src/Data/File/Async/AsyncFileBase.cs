@@ -85,6 +85,10 @@ namespace EchoCapture.Data.File.Async{
                 throw new InvalidOperationException("File already exists.");
             }
 
+            //create folder
+            //if doesn't exists
+            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(this.FullPath));
+
             //create
             try{
                 //perform
@@ -109,6 +113,10 @@ namespace EchoCapture.Data.File.Async{
             if(this.FileExists){
                 return false;
             }
+
+            //create folder
+            //if doesn't exists
+            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(this.FullPath));
 
             try{
                 //create the filestream, (along with file)
