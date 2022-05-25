@@ -138,12 +138,17 @@ namespace EchoCapture.Command{
             delay = null;
             FileExtension? imageExtension = null;
 
+            //refresh png quality setting
+            ImageFile.QueueForImageQualitySettingRefresh();
+
             //check if already running
             if(!this.isRunning){
                 //try get data
                 try{
+                    imageExtension = ImageFile._ImageQualitySetting.ImageType;
                     ApplicationData.GetFileData(out delay);
-                    ApplicationData.GetFileData(out imageExtension);
+                    //ApplicationData.GetFileData(out imageExtension);
+                    //move image format in the image quality preset from json
                 } catch (ReadingDataFileException){
                     //throw new exception
                     throw new ReadingDataFileException("Failed to start the operation of capturing screen.");
@@ -160,8 +165,6 @@ namespace EchoCapture.Command{
                 this.isRunning = true;
                 //update token source
                 this.cancelTokenSource = new CancellationTokenSource();
-                //refresh png quality setting
-                ImageFile.QueueForImageQualitySettingRefresh();
                 //start work
                 this.work = this.ExecuteWork(this.cancelTokenSource.Token, (int)delay, (FileExtension)imageExtension);
 
@@ -250,9 +253,9 @@ namespace EchoCapture.Command{
 
             //create instance
             if(imageExtension == FileExtension.png){
-                file = new PngFile(date, ApplicationData.DataFolder);
-            } else if(imageExtension == FileExtension.jpg){
-                file = new JpgFile(date, ApplicationData.DataFolder);
+                file = new PngFile(date, ApplicationData.CaptureScreenFolder);
+            } else if(imageExtension == FileExtension.jpeg){
+                file = new JpgFile(date, ApplicationData.CaptureScreenFolder);
             }
 
             //will hold the stream
