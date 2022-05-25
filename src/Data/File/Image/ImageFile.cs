@@ -58,7 +58,7 @@ namespace EchoCapture.Data.File.Image{
             //update image type
             if(extension == FileExtension.png){
                 this.imageFormat = ImageFormat.Png;
-            } else if(extension == FileExtension.jpg){
+            } else if(extension == FileExtension.jpeg){
                 this.imageFormat = ImageFormat.Jpeg;
             } else {
                 throw new ArgumentException("Parameter 3 is not a valid image file extension.");
@@ -142,7 +142,7 @@ namespace EchoCapture.Data.File.Image{
         /// <summary> Correct the extension of a jpeg image file.</summary>
         private void JPGFileFix(){
             //jpg extension only
-            if(this.Extension != FileExtension.jpg){
+            if(this.Extension != FileExtension.jpeg){
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace EchoCapture.Data.File.Image{
                 }
             }
         }
-
+        
         /// <summary> Screenshot the entire screen and return in a bitmap object, with pixel format specified in setting.</summary>
         /// <remarks> You may want to clear resources.</remarks>
         public static Bitmap Screenshot(){
@@ -206,7 +206,7 @@ namespace EchoCapture.Data.File.Image{
 
         /// <summary> Determine if the extension is an image extension.</summary>
         public static bool ValidateImageExtension(FileExtension imageExtension){
-            if(imageExtension == FileExtension.jpg || imageExtension == FileExtension.png){
+            if(imageExtension == FileExtension.jpeg || imageExtension == FileExtension.png){
                 return true;
             }
 
@@ -218,6 +218,16 @@ namespace EchoCapture.Data.File.Image{
             ImageFile.imageQualitySettingRefresh = true;
         }
 
+        private static ImageCodecInfo GetImageEncoder(ImageFormat imageFormat){
+            //loop through encoders
+            foreach(ImageCodecInfo encoder in ImageCodecInfo.GetImageEncoders()){
+                if(encoder.FormatID == imageFormat.Guid){
+                    return encoder;
+                }
+            }
+            //not found
+            return null;
+        }
 
         #region Asynchronous file operations
 
@@ -230,6 +240,10 @@ namespace EchoCapture.Data.File.Image{
             if(this.FileExists){
                 throw new InvalidOperationException("File already exists.");
             }
+
+            //create folder
+            //if doesn't exists
+            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(this.FullPath));
 
             //create
             await Task.Run(() => {
@@ -249,6 +263,10 @@ namespace EchoCapture.Data.File.Image{
             if(this.FileExists){
                 return false;
             }
+
+            //create folder
+            //if doesn't exists
+            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(this.FullPath));
 
             try{
                 //create the filestream, (along with file)
