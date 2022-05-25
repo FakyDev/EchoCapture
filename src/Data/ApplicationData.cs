@@ -77,10 +77,10 @@ namespace EchoCapture.Data{
             }
         }
 
-        /// <summary> (Get only) Return path to the image quality config folder.</summary>
-        internal static string ImageConfigFolder{
+        /// <summary> (Get only) Return path to the capture screen folder..</summary>
+        internal static string CaptureScreenFolder{
             get{
-                return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "imageConfig";
+                return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "captureScreen";
             }
         }
 
@@ -309,7 +309,7 @@ namespace EchoCapture.Data{
         /// <summary> Validates the image quality presets and try to repair them.</summary>
         private static void ValidateImageQualityConfig(){
             //create instance
-            ApplicationData.imagePresetConfigFile = new IniFile("imageQuality", ApplicationData.ImageConfigFolder);
+            ApplicationData.imagePresetConfigFile = new IniFile("imageQuality", ApplicationData.DataFolder);
 
             //will hold the file stream
             System.IO.FileStream fs = null;
@@ -412,12 +412,16 @@ namespace EchoCapture.Data{
             //add preset using
             iniFile.Parsed_ini.AddLineComment("The preset to use.", 10);
             iniFile.Parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
-            //add image rescaling
+            //add image type using
             iniFile.Parsed_ini.AddEmptyLine(12);
-            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 13);
-            iniFile.Parsed_ini.AddValueAtEnd<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "True or False (case-sensitive)");
-            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
-            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+            iniFile.Parsed_ini.AddLineComment("The image type to use to save the capture screen", 13);
+            iniFile.Parsed_ini.AddValue<string>("imageType", ImageQualityPresetSetting.DefaultImageType, 14, "#Either png or jpeg");
+            //add image rescaling
+            iniFile.Parsed_ini.AddEmptyLine(15);
+            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 16);
+            iniFile.Parsed_ini.AddValueAtEnd<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "#True or False (case-sensitive)");
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
             iniFile.Parsed_ini.AddEmptyLineAtEnd();
 
             //defines presets
@@ -427,7 +431,8 @@ namespace EchoCapture.Data{
             for (int i = 0; i < subsecions.Length; i++){
                 //create subsection and add values
                 iniFile.Parsed_ini.CreateSubsection(subsecions[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], "#Choose from the list above");
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<int>(subsecions[i], "imageQuality", ImageQualityPresetSetting.DefaultJpegImageQuality[i], "#Only works if jpeg is set to image type, ranges from 0 to 100.");
                 iniFile.Parsed_ini.AddEmptyLineAtEnd(subsecions[i]);
             }
 
@@ -460,12 +465,16 @@ namespace EchoCapture.Data{
             //add preset using
             iniFile.Parsed_ini.AddLineComment("The preset to use.", 10);
             iniFile.Parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
-            //add image rescaling
+            //add image type using
             iniFile.Parsed_ini.AddEmptyLine(12);
-            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 13);
+            iniFile.Parsed_ini.AddLineComment("The image type to use to save the capture screen", 13);
+            iniFile.Parsed_ini.AddValue<string>("imageType", ImageQualityPresetSetting.DefaultImageType, 14, "#Either png or jpeg");
+            //add image rescaling
+            iniFile.Parsed_ini.AddEmptyLine(15);
+            iniFile.Parsed_ini.AddLineComment("Image rescaling, scales the screenshot taken to the following values if enabled.", 16);
             iniFile.Parsed_ini.AddValueAtEnd<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, "#True or False (case-sensitive)");
-            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
-            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
+            iniFile.Parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
             iniFile.Parsed_ini.AddEmptyLineAtEnd();
 
             //defines presets
@@ -475,7 +484,8 @@ namespace EchoCapture.Data{
             for (int i = 0; i < subsecions.Length; i++){
                 //create subsection and add values
                 iniFile.Parsed_ini.CreateSubsection(subsecions[i]);
-                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<string>(subsecions[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], "#Choose from the list above");
+                iniFile.Parsed_ini.AddValueInSubsectionAtEnd<int>(subsecions[i], "imageQuality", ImageQualityPresetSetting.DefaultJpegImageQuality[i], "#Only works if jpeg is set to image type, ranges from 0 to 100.");
                 iniFile.Parsed_ini.AddEmptyLineAtEnd(subsecions[i]);
             }
 
@@ -525,7 +535,7 @@ namespace EchoCapture.Data{
                 //value dont exists
                 } else {
                     //add value
-                    parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 11);
+                    parsed_ini.AddValue<string>("selectedPreset", ImageQualityPresetSetting.DefaultChoosenPreset, 14);
                     //update state
                     hasUpdatedSomething = true;
                 }
@@ -537,13 +547,50 @@ namespace EchoCapture.Data{
                 hasUpdatedSomething = true;
             }
 
+            //hold the image type
+            string imageTypeValue;
+            try{
+                //retrive the image type
+                if(parsed_ini.SearchValue<string>("imageType", out imageTypeValue)){
+                    //determine if image type is valid
+                    bool validImageType = false;
+
+                    //check if chose preset is valid
+                    for (int i = 0; i < ImageQualityPresetSetting.ValidImageTypes.Length; i++){
+                        if(imageTypeValue == ImageQualityPresetSetting.ValidImageTypes[i]){
+                            validImageType = true;
+                            break;
+                        }
+                    }
+
+                    //defaults the image type
+                    if(!validImageType){
+                        parsed_ini.SetValue<string>("imageType", ImageQualityPresetSetting.DefaultImageType, "#Either png or jpeg");
+                        //update state
+                        hasUpdatedSomething = true;
+                    }
+                //value dont exists
+                } else {
+                    //add value
+                    parsed_ini.AddValue<string>("imageType", ImageQualityPresetSetting.DefaultImageType, 14, "#Either png or jpeg");
+                    //update state
+                    hasUpdatedSomething = true;
+                }
+
+            //value type is invalid
+            } catch(IniLineDataParsingException){
+                parsed_ini.SetValueIgnoringType<string>("imageType", ImageQualityPresetSetting.DefaultImageType, "#Either png or jpeg");
+                //update state
+                hasUpdatedSomething = true;
+            }
+
             //hold the image rescaling state
             bool imageRescaling;
             try{
                 //check if doesn't exists
                 if(!parsed_ini.SearchValue<bool>("rescaleImage", out imageRescaling)){
                     //add value
-                    parsed_ini.AddValue<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, 14, "#True or False (case-sensitive)");
+                    parsed_ini.AddValue<bool>("rescaleImage", ImageQualityPresetSetting.DefaultRescaling, 17, "#True or False (case-sensitive)");
                     //update state
                     hasUpdatedSomething = true;
                 }
@@ -573,8 +620,8 @@ namespace EchoCapture.Data{
                     //invalid range
                     if(newImageResolution[0] <= 0f || newImageResolution[1] <= 0f){
                         //update
-                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
-                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
+                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
                         //update state
                         hasUpdatedSomething = true;
                     }
@@ -582,29 +629,29 @@ namespace EchoCapture.Data{
                 //failed to retrieve both
                 } else if(!retrivedHeight && !retrivedWidth){
                     //update
-                    parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
-                    parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                    parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
+                    parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
                     //update state
                     hasUpdatedSomething = true;
                 } else {
                     //update
                     if(retrivedWidth){
-                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                        parsed_ini.SetValue<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
                     } else {
-                        parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
+                        parsed_ini.AddValueAtEnd<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
                     }
                     //update
                     if(retrivedHeight){
-                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                        parsed_ini.SetValue<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
                     } else {
-                        parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                        parsed_ini.AddValueAtEnd<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
                     }
                     //update state
                     hasUpdatedSomething = true;
                 }
             } catch(IniLineDataParsingException){
-                parsed_ini.SetValueIgnoringType<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0]);
-                parsed_ini.SetValueIgnoringType<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1]);
+                parsed_ini.SetValueIgnoringType<int>("newWidthDimension", ImageQualityPresetSetting.DefaultRescalingResolution[0], "#Value must be greater than zero");
+                parsed_ini.SetValueIgnoringType<int>("newHeightDimension", ImageQualityPresetSetting.DefaultRescalingResolution[1], "#Value must be greater than zero");
                 //update state
                 hasUpdatedSomething = true;
             }
@@ -618,7 +665,7 @@ namespace EchoCapture.Data{
                 }
 
                 //create subsection along with values
-                parsed_ini.CreateSubsection(subsections[i], new string[1]{$"pixelFormat = {ImageQualityPresetSetting.DefaultPixelFormats[i]}"});
+                parsed_ini.CreateSubsection(subsections[i], new string[1]{$"pixelFormat = {ImageQualityPresetSetting.DefaultPixelFormats[i]} #Choose from the list above"});
                 //update state
                 hasUpdatedSomething = true;
             }
@@ -631,20 +678,47 @@ namespace EchoCapture.Data{
                     //exists, correct value type but might be invalid value
                     if(parsed_ini.SearchValue<string>(subsections[i], "pixelFormat", out pixelFormatValue)){
                         //invalid pixel format
-                        if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormatValue)){
-                            parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], false);
+                        if(!ImageQualityPresetSetting.ValidPixelFormats.Contains(pixelFormatValue)){
+                            parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], "#Choose from the list above");
                             //update state
                             hasUpdatedSomething = true;
                         }
 
                     //non-existant
                     } else {
-                        parsed_ini.AddValueInSubsectionAtEnd<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i]);
+                        parsed_ini.AddValueInSubsectionAtEnd<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], "#Choose from the list above");
                         //update state
                         hasUpdatedSomething = true;
                     }
                 } catch (IniLineDataParsingException){
-                    parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], false);
+                    parsed_ini.SetValueIgnoringType<string>(subsections[i], "pixelFormat", ImageQualityPresetSetting.DefaultPixelFormats[i], "#Choose from the list above");
+                    //update state
+                    hasUpdatedSomething = true;
+                }
+            }
+
+            //loop through subsection to check for correct data type of image quality
+            int imageQuality;
+            for (int i = 0; i < subsections.Length; i++){
+                //exception on invalid value type
+                try{
+                    //exists, correct value type but might be invalid value
+                    if(parsed_ini.SearchValue<int>(subsections[i], "imageQuality", out imageQuality)){
+                        //invalid pixel format
+                        if(!ImageQualityPresetSetting.ValidJpegImageQuality.Contains(imageQuality)){
+                            parsed_ini.SetValueIgnoringType<int>(subsections[i], "imageQuality", ImageQualityPresetSetting.DefaultJpegImageQuality[i], "#Only works if jpeg is set to image type, ranges from 0 to 100.");
+                            //update state
+                            hasUpdatedSomething = true;
+                        }
+
+                    //non-existant
+                    } else {
+                        parsed_ini.AddValueInSubsectionAtEnd<int>(subsections[i], "imageQuality", ImageQualityPresetSetting.DefaultJpegImageQuality[i], "#Only works if jpeg is set to image type, ranges from 0 to 100.");
+                        //update state
+                        hasUpdatedSomething = true;
+                    }
+                } catch (IniLineDataParsingException){
+                    parsed_ini.SetValueIgnoringType<int>(subsections[i], "imageQuality", ImageQualityPresetSetting.DefaultJpegImageQuality[i], "#Only works if jpeg is set to image type, ranges from 0 to 100.");
                     //update state
                     hasUpdatedSomething = true;
                 }
@@ -694,7 +768,7 @@ namespace EchoCapture.Data{
             }
         }
 
-        /// <summary> Reads the ini file containing jpeg quality config, and return it in an object representing jpeg quality setting.</summary>
+        /// <summary> Reads the ini file containing image quality preset config, and return it in an object representing image quality preset config.</summary>
         public static ImageQualityPresetSetting GetImageQualityData() => new ImageQualityPresetSetting(ApplicationData.imagePresetConfigFile);
 
 
@@ -788,7 +862,7 @@ namespace EchoCapture.Data{
             /// <exception cref="System.ArgumentException"> Thrown when file extension is invalid.</exception>
             public void SetImageExtension(FileExtension imageExtension){
                 //check if invalid
-                if(imageExtension != FileExtension.png && imageExtension != FileExtension.jpg){
+                if(imageExtension != FileExtension.png && imageExtension != FileExtension.jpeg){
                     throw new ArgumentException("File extension passed is invalid.");
                 }
 
@@ -821,6 +895,13 @@ namespace EchoCapture.Data{
             /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
             public readonly static string[] DefaultPixelFormats = new string[3]{"Format48bppRgb", "Format32bppRgb", "Format24bppRgb"};
 
+            /// <summary> Default image quality applicable only when jpeg format is set.</summary>
+            /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
+            public readonly static int[] DefaultJpegImageQuality = new int[3]{100, 90, 80};
+
+            /// <summary> The default image type to use for saving image in an image quality preset config.</summary>
+            public const string DefaultImageType = "png";
+
             /// <summary> The default image rescaling value in an image quality preset config.</summary>
             public const bool DefaultRescaling = false;
 
@@ -830,25 +911,47 @@ namespace EchoCapture.Data{
             /// <summary> The default preset that the application will use.</summary>
             public const string DefaultChoosenPreset = "standard";
 
+            
             /// <summary> String array holding valid pixel formats.</summary>
-            private static string[] validDefaultPixelFormat = null;
+            private static string[] validPixelFormats = null;
+
+            /// <summary> String array holding valid image type for saving image.</summary>
+            private static string[] validImageTypes = null;
 
             /// <summary> (Get only) Return string array holding valid pixel formats.</summary>
-            public static string[] ValidDefaultPixelFormat{
+            public static string[] ValidPixelFormats{
                 get{
                     //update
-                    if(validDefaultPixelFormat == null){
-                        ImageQualityPresetSetting.validDefaultPixelFormat = new string[9]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
+                    if(validPixelFormats == null){
+                        ImageQualityPresetSetting.validPixelFormats = new string[9]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
                         "Format32bppPArgb", "Format32bppRgb", "Format48bppRgb", "Format64bppArgb", "Format64bppPArgb"};
                     }
 
-                    return ImageQualityPresetSetting.validDefaultPixelFormat;
+                    return ImageQualityPresetSetting.validPixelFormats;
                 }
             }
             
+            /// <summary> (Get only) Return string array holding valid image type for saving image.</summary>
+            public static string[] ValidImageTypes{
+                get{
+                    //update
+                    if(validImageTypes == null){
+                        ImageQualityPresetSetting.validImageTypes = new string[2]{"png", "jpeg"};
+                    }
+
+                    return ImageQualityPresetSetting.validImageTypes;
+                }
+            }
+
+            /// <summary> The valid ranges for jpeg image quality.</summary>
+            public readonly static IEnumerable<int> ValidJpegImageQuality = Enumerable.Range(0, 101);
+
 
             /// <summary> The pixel format that the preset is set for.</summary>
             private System.Drawing.Imaging.PixelFormat pixelFormat;
+
+            /// <summary> Holds the the image type set in the image quality preset config.</summary>
+            private FileExtension imageType;
 
             /// <summary> Determine if image rescaling is enable.</summary>
             private bool enabledRescaling;
@@ -856,10 +959,21 @@ namespace EchoCapture.Data{
             /// <summary> The resolution to rescale the image with.</summary>
             private int[] rescalingResolution;
 
+            /// <summary> The value determine the image quality applicable only to jpeg.</summary>
+            private int jpegImageQuality;
+
+
             /// <summary> (Get only) Returns the pixel format that the preset if set for.</summary>
             public System.Drawing.Imaging.PixelFormat _PixelFormat{
                 get{
                     return this.pixelFormat;
+                }
+            }
+
+            /// <summary> (Get only) Returns the image type set in the image quality preset config.</summary>
+            public FileExtension ImageType{
+                get{
+                    return this.imageType;
                 }
             }
 
@@ -877,26 +991,47 @@ namespace EchoCapture.Data{
                 }
             }
 
+            /// <summary> (Get only) Return the value determine the image quality applicable only to jpeg.</summary>
+            public int JpegImageQuality{
+                get{
+                    return this.jpegImageQuality;
+                }
+            }
+
+
             /// <summary> Creates instance with image rescaling enable.</summary>
             /// <param name="pixelFormat"> The name of the in use pixel format, case-sensitive.</param>
+            /// <param name="jpegQuality"> The image quality applicable only to jpeg.</param>
+            /// <param name="imageType"> The image type set.</param>
             /// <param name="newWidth"> The new width of the image dimension.</param>
             /// <param name="newHeight"> The new height of the image dimension.</param>
-            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats, failed
+            /// to parse pixelFormat into enum, imageType is not from list of valid image types or failed to parse imageType into enum</exception>
             /// <exception cref="System.ArgumentOutOfRangeException"> The value of qualityLevel was out of range of the valid values for quality.</exception>
-            private ImageQualityPresetSetting(string pixelFormat, int newWidth, int newHeight){
+            public ImageQualityPresetSetting(string pixelFormat, int jpegQuality, string imageType, int newWidth, int newHeight){
                 //check for list of pixel format
-                if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormat)){
+                if(!ImageQualityPresetSetting.ValidPixelFormats.Contains(pixelFormat)){
                     throw new ArgumentException("Argument 1 passed is not from the list of valid pixel formats.", "pixelFormat");
+                }
+
+                //check for list of image types
+                if(!ImageQualityPresetSetting.validImageTypes.Contains(imageType)){
+                    throw new ArgumentException("Argument 3 passed is not from the list of valid image types.", "imageType");
+                }
+
+                //check for jpeg image quality range
+                if(!ImageQualityPresetSetting.ValidJpegImageQuality.Contains(jpegQuality)){
+                    throw new ArgumentException("Argument 2 passed is not in the range of valid jpeg image quality values.", "jpegQuality");
                 }
 
                 //check for range of new dimension
                 if(newWidth <= 0){
-                    throw new ArgumentOutOfRangeException("Argument 3 passed is invalid. Zero and negative values isn't valid.", "newWidth");
+                    throw new ArgumentOutOfRangeException("Argument 4 passed is invalid. Zero and negative values isn't valid.", "newWidth");
                 }
 
                 //check for range of new dimension
                 if(newHeight <= 0){
-                    throw new ArgumentOutOfRangeException("Argument 3 passed is invalid. Zero and negative values isn't valid.", "newHeight");
+                    throw new ArgumentOutOfRangeException("Argument 5 passed is invalid. Zero and negative values isn't valid.", "newHeight");
                 }
 
                 //parse value to enum and update field
@@ -904,18 +1039,37 @@ namespace EchoCapture.Data{
                     throw new ArgumentException("Argument 1 passed has failed to be parsed into an enum.", "pixelFormat");
                 }
 
+                //parse value to enum and update field
+                if(!Enum.TryParse<FileExtension>(imageType, false, out this.imageType)){
+                    throw new ArgumentException("Argument 2 passed has failed to be parsed into an enum.", "imageType");
+                }
+
                 //update values
+                this.jpegImageQuality = jpegQuality;
                 this.enabledRescaling = true;
                 this.rescalingResolution = new int[2]{newWidth, newHeight};
             }
 
             /// <summary> Creates instance with image rescaling disable.</summary>
             /// <param name="pixelFormat"> The name of the in use pixel format, case-sensitive.</param>
-            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
-            private ImageQualityPresetSetting(string pixelFormat){
+            /// <param name="jpegQuality"> The image quality applicable only to jpeg.</param>
+            /// <param name="imageType"> The image type set.</param>
+            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats, failed
+            /// to parse pixelFormat into enum, imageType is not from list of valid image types or failed to parse imageType into enum</exception>
+            public ImageQualityPresetSetting(string pixelFormat, int jpegQuality, string imageType){
                 //check for list of pixel format
-                if(!ImageQualityPresetSetting.ValidDefaultPixelFormat.Contains(pixelFormat)){
+                if(!ImageQualityPresetSetting.ValidPixelFormats.Contains(pixelFormat)){
                     throw new ArgumentException("Argument 1 passed is not from the list of valid pixel formats.", "pixelFormat");
+                }
+
+                //check for jpeg image quality range
+                if(!ImageQualityPresetSetting.ValidJpegImageQuality.Contains(jpegQuality)){
+                    throw new ArgumentException("Argument 2 passed is not in the range of valid jpeg image quality values.", "jpegQuality");
+                }
+
+                //check for list of image types
+                if(!ImageQualityPresetSetting.validImageTypes.Contains(imageType)){
+                    throw new ArgumentException("Argument 3 passed is not from the list of valid image types.", "imageType");
                 }
 
                 //parse value to enum and update field
@@ -923,14 +1077,21 @@ namespace EchoCapture.Data{
                     throw new ArgumentException("Argument 1 passed has failed to be parsed into an enum.", "pixelFormat");
                 }
 
+                //parse value to enum and update field
+                if(!Enum.TryParse<FileExtension>(imageType, false, out this.imageType)){
+                    throw new ArgumentException("Argument 3 passed has failed to be parsed into an enum.", "imageType");
+                }
+
                 //update values
+                this.jpegImageQuality = jpegQuality;
                 this.enabledRescaling = true;
                 this.rescalingResolution = null;
             }
 
             /// <summary> Creates instance from an ini file.</summary>
             /// <param name="iniFile"> The ini file to search values from.</param>
-            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats or failed to parse pixelFormat into enum.</exception>
+            /// <exception cref="System.ArgumentException"> Thrown when pixelFormat is not from list of valid pixel formats, failed
+            /// to parse pixelFormat into enum, imageType is not from list of valid image types or failed to parse imageType into enum</exception>
             /// <exception cref="System.ArgumentOutOfRangeException"> The new image dimension was out of range of the valid dimension.</exception>
             public ImageQualityPresetSetting(IniFile iniFile){
                 //get parsed ini
@@ -938,24 +1099,39 @@ namespace EchoCapture.Data{
 
                 //hold retrived values from file
                 string presetChose;
+                string imageType;
                 bool enabledRescaling;
                 int[] newResolution = new int[2];
                 string pixelFormatValue;
+                int jpegQuality;
 
                 //search values
                 parsed_ini.SearchValue<string>("selectedPreset", out presetChose);
+                parsed_ini.SearchValue<string>("imageType", out imageType);
                 parsed_ini.SearchValue<bool>("rescaleImage", out enabledRescaling);
                 parsed_ini.SearchValue<int>("newWidthDimension", out newResolution[0]);
                 parsed_ini.SearchValue<int>("newHeightDimension", out newResolution[1]);
                 parsed_ini.SearchValue<string>(presetChose, "pixelFormat", out pixelFormatValue);
+                parsed_ini.SearchValue<int>(presetChose, "imageQuality", out jpegQuality);
 
                 //update states
                 this.enabledRescaling = enabledRescaling;
                 this.rescalingResolution = null;
+                this.jpegImageQuality = jpegQuality;
 
                 //parse value to enum and update field
                 if(!Enum.TryParse<System.Drawing.Imaging.PixelFormat>(pixelFormatValue, false, out this.pixelFormat)){
                     throw new ArgumentException("Failed to parse pixel format into an enum, pixel format read from the instance of argument 1.", "iniFile");
+                }
+
+                //parse value to enum and update field
+                if(!Enum.TryParse<FileExtension>(imageType, false, out this.imageType)){
+                    throw new ArgumentException("Failed to parse image type into an enum, image type read from the instance of argument 1.", "iniFile");
+                }
+
+                //check for jpeg image quality range
+                if(!ImageQualityPresetSetting.ValidJpegImageQuality.Contains(jpegQuality)){
+                    throw new ArgumentException("Image quality for jpeg format, is invalid, read from the instance of argument 1.", "iniFile");
                 }
 
                 if(enabledRescaling){
