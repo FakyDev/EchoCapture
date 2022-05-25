@@ -10,7 +10,7 @@ namespace EchoCapture.Data.File{
         png,
 
         /// <summary> The extension of an image file.</summary>
-        jpg,
+        jpeg,
 
         /// <summary> The extension of a text file.</summary>
         txt,
