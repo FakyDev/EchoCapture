@@ -131,19 +131,13 @@ namespace EchoCapture.Data{
                 updatedContent.SavedPath = data.Path;
 
                 //update log
-                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Storage location has been updated to \"{data.Path}\" in the application data folder.");
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Screen captures saving directory has been updated to \"{data.Path}\" in the application setting.");
             }
             if(data.UpdateType == UpdateData.DataType.timeout){
                 updatedContent.TimeoutMS = data.Timeout;
 
                 //update log
-                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Time-interval has been updated to {data.Timeout}ms in the application data folder.");
-            }
-            if(data.UpdateType == UpdateData.DataType.imageFileExtension){
-                updatedContent.SetImageExtension((FileExtension)data.ImageExtension);
-
-                //update log
-                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Image format has been updated to {data.ImageExtension.ToString().ToUpper()} in the application data folder.");
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The time-interval capturing screen has been updated to {data.Timeout}ms in the application setting.");
             }
 
             //update variable
@@ -191,33 +185,14 @@ namespace EchoCapture.Data{
             interval = content[0].TimeoutMS;
         }
 
-        /// <summary> Retrieve the image extension from the data file.</summary>
-        /// <param name="interval"> Will hold the time interval value.</param>
-        /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
-        public static void GetFileData(out FileExtension? imageExtension){
-            //default value
-            imageExtension = null;
-
-            //will hold the data of the file
-            List<Setting> content;
-            //try to read file
-            if(!ApplicationData.dataFile.ReadFile(out content)){
-                throw new ReadingDataFileException();
-            }
-
-            //update data
-            imageExtension = content[0].GetImageExtension();
-        }
-
         /// <summary> Retrieve all the data from application data file.</summary>
         /// <param name="path"> Will hold the retrieved path.</param>
         /// <param name="interval"> Will hold the time interval value.</param>
         /// <exception cref="EchoCapture.Exceptions.Data.ReadingDataFileException"></exception>
-        public static void GetAllFileData(out string path, out int? interval, out FileExtension? imageExtension){
+        public static void GetAllFileData(out string path, out int? interval){
             //default value
             path = null;
             interval = null;
-            imageExtension = null;
 
             //will hold the data of the file
             List<Setting> content;
@@ -229,10 +204,9 @@ namespace EchoCapture.Data{
             //update data
             path = content[0].SavedPath;
             interval = content[0].TimeoutMS;
-            imageExtension = content[0].GetImageExtension();
         }
         
-        /// <summary> Validate the file(s) holding data for the application.</summary>
+        /// <summary> Validate the file holding data for the application.</summary>
         /// <exception cref="EchoCapture.Exceptions.Data.OverwritingDataFileException"></exception>
         /// <exception cref="EchoCapture.Exceptions.Data.CreatingDataFileException"></exception>
         private static void ValidateDataFile(){
@@ -336,10 +310,10 @@ namespace EchoCapture.Data{
                     }
 
                     //notify user that image quality config file is created
-                    System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog("Image quality preset config has been created.");
+                    System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"New image quality preset config has been created at \"{ApplicationData.DataFolder}\".");
                     //if debug is on
                     if(Debug.IsDebug){
-                        Console.WriteLine("Image quality preset config has been created.");
+                        Console.WriteLine($"New image quality preset config has been created at \"{ApplicationData.DataFolder}\".");
                         Debug.SkipLine();
                     }
 
@@ -771,6 +745,204 @@ namespace EchoCapture.Data{
         /// <summary> Reads the ini file containing image quality preset config, and return it in an object representing image quality preset config.</summary>
         public static ImageQualityPresetSetting GetImageQualityData() => new ImageQualityPresetSetting(ApplicationData.imagePresetConfigFile);
 
+        /// <summary> Return the current using preset.</summary>
+        public static string GetCurrentSelectedPreset(){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+
+            //will hold the preset name
+            string presetName;
+
+            //retrives the current preset
+            parsed_ini.SearchValue<string>("selectedPreset", out presetName);
+
+            //return
+            return presetName;
+        }
+
+        /// <summary> Get data in all presets and return them in dictionary and key as the preset name.</summary>
+        public static Dictionary<string, ImageQualityPresetSetting> GetPresetsData(){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+            //list of presets data
+            Dictionary<string, ImageQualityPresetSetting> presets = new Dictionary<string, ImageQualityPresetSetting>();
+
+            //valid subsections, also presets
+            string[] subsections = new string[3]{"high", "standard", "low"};
+            //loop through them
+            foreach(string preset in subsections){
+                //holds the pixel for and jpeg image quality
+                string pixelFormat;
+                int jpegImageQuality;
+
+                //retrieves data for the preset
+                parsed_ini.SearchValue<string>(preset, "pixelFormat", out pixelFormat);
+                parsed_ini.SearchValue<int>(preset, "imageQuality", out jpegImageQuality);
+
+                //add to list
+                presets.Add(preset, new ImageQualityPresetSetting(pixelFormat, jpegImageQuality, "png"));
+            }
+
+            //return presets
+            return presets;
+        }
+
+
+        /// <summary> Update the rescaling resolution in the image quality preset.</summary>
+        /// <param name="qualitySetting"> The object representing the new setting to be updated with.</param>
+        public static bool UpdateImageQualityRescalingResolution(ImageQualityPresetSetting qualitySetting){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+
+            //update rescaling resolution
+            parsed_ini.SetValue<int>("newWidthDimension", qualitySetting.RescalingResolution[0]);
+            parsed_ini.SetValue<int>("newHeightDimension", qualitySetting.RescalingResolution[1]);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The image-rescaling resolution has been set to {qualitySetting.RescalingResolution[0]}x{qualitySetting.RescalingResolution[1]} in the image quality setting.");
+                return true;
+            }
+
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to save the image-rescaling resolution in the image quality setting.");
+            return false;
+        }
+
+        /// <summary> Update the pixel format in the current chosen preset.</summary>
+        /// <param name="qualitySetting"> The structure containing the new pixel format.</param>
+        public static bool UpdateImageQualityPixelFormat(ImageQualityPresetSetting qualitySetting){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+            //hold the selected preset value
+            string selectedPreset;
+            
+            //retrieve the value
+            parsed_ini.SearchValue<string>("selectedPreset", out selectedPreset);
+
+            //update pixel format
+            parsed_ini.SetValue<string>(selectedPreset, "pixelFormat", qualitySetting._PixelFormat.ToString(), false);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The pixel format has been set to {qualitySetting._PixelFormat.ToString()} for the \"{selectedPreset}\" preset in the image quality setting.");
+                return true;
+            }
+
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to save the pixel format for the \"{selectedPreset}\" preset in the image quality setting.");
+            return false;
+        }
+
+        /// <summary> Update the jpeg image quality in current chosen preset.</summary>
+        /// <param name="qualitySetting"> The structure containing the new jpeg quality.</param>
+        public static bool UpdateImageQualityJpgQuality(ImageQualityPresetSetting qualitySetting){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+            //hold the selected preset value
+            string selectedPreset;
+            
+            //retrieve the value
+            parsed_ini.SearchValue<string>("selectedPreset", out selectedPreset);
+
+            //update jpg quality
+            parsed_ini.SetValue<int>(selectedPreset, "imageQuality", qualitySetting.JpegImageQuality, false);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The jpeg image quality has been set to {qualitySetting.JpegImageQuality}% for the \"{selectedPreset}\" preset in the image quality setting.");
+                return true;
+            }
+
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to save the jpeg image quality for the \"{selectedPreset}\" preset in the image quality setting.");
+            return false;
+        }
+
+        /// <summary> Update the preset chosen in the image quality file.</summary>
+        /// <remarks> <paramref name="presetName"/> can only be "high", "standard" or "low".</remarks>
+        /// <param name="presetName"> The name of the preset.</param>
+        /// <exception cref="System.ArgumentException"> Thrown when <paramref name="presetName"/> is not valid.</exception>
+        public static bool UpdateImageQualityPreset(string presetName){
+            //valid subsections, also presets
+            string[] subsections = new string[3]{"high", "standard", "low"};
+
+            //invaid preset
+            if(!subsections.Contains(presetName)){
+                throw new ArgumentException("Preset passed is not from the valid list of presets.", "presetName");
+            }
+
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+
+            //update preset chose
+            parsed_ini.SetValue<string>("selectedPreset", presetName);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"\"{presetName}\" has been selected as the current using preset in the image quality setting.");
+                return true;
+            }
+
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to save \"{presetName}\" as the current using preset in the image quality setting.");
+            return false;
+        }
+
+        /// <summary> Update the image type in the image quality preset.</summary>
+        /// <remarks> <paramref name="imageType"/> can only be "png" or "jpeg".</remarks>
+        /// <param name="imageType"> The image type to use.</param>
+        /// <exception cref="System.ArgumentException"> Thrown when <paramref name="imageType"/> is not valid.</exception>
+        public static bool UpdateImageQualityFileType(string imageType){
+            //valid extension
+            string[] subsections = new string[2]{"png", "jpeg"};
+
+            //invaid preset
+            if(!subsections.Contains(imageType)){
+                throw new ArgumentException("Image type passed is not from the valid list of image types.", "imageType");
+            }
+
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+
+            //update preset chose
+            parsed_ini.SetValue<string>("imageType", imageType);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"The image type to save capture screen has been set to \"{imageType}\" in the image quality setting.");
+                return true;
+            }
+
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to save the image type of \"{imageType}\" in the image quality setting.");
+            return false;
+        }
+        
+        /// <summary> Update the image rescaling state in the image quality preset.</summary>
+        public static bool UpdateImageQualityRescaling(bool state){
+            //reference to the parsed ini
+            IniFile.ParsedIni parsed_ini = ApplicationData.imagePresetConfigFile.Parsed_ini;
+
+            //update rescale state
+            parsed_ini.SetValue<bool>("rescaleImage", state);
+
+            //save value
+            if(ApplicationData.imagePresetConfigFile.Save()){
+                //update log
+                System.Threading.Tasks.Task updateLog = ApplicationData.UpdateLog($"Image rescaling has been set to {state.ToString().ToLower()} in the image quality setting.");
+                return true;
+            }
+            //update log
+            System.Threading.Tasks.Task _updateLog = ApplicationData.UpdateLog($"Failed to set image rescaling to {state.ToString().ToLower()} in the image quality setting.");
+            return false;
+        }
+
 
         /// <summary> Update the log with <paramref name="text"/>.</summary>
         public static async System.Threading.Tasks.Task UpdateLog(string text){
@@ -816,13 +988,9 @@ namespace EchoCapture.Data{
             /// <summary> Hold the value of the time interval.</summary>
             private int? timeoutMS;
 
-            /// <summary> Hold the file extension of the capture screen.</summary>
-            private FileExtension? imageExtension;
-
             public Setting(string savedPath, int? timeoutMS, FileExtension imageExtension){
                 this.savedPath = savedPath;
                 this.timeoutMS = timeoutMS;
-                this.imageExtension = imageExtension;
             }
 
             /// <summary> The path where capture screen will be saved.</summary>
@@ -845,41 +1013,10 @@ namespace EchoCapture.Data{
                 }
             }
 
-            /// <summary> (Get and partially set) The image file extension using. It also defines the image format.</summary>
-            public string ImageExtension{
-                get{
-                    return this.imageExtension.ToString().ToLower();
-                }
-                set{
-                    //try to update
-                    try{
-                        this.imageExtension = (FileExtension)Enum.Parse(typeof(FileExtension), value);
-                    } catch (Exception){}
-                }
-            }
-
-            /// <summary> Update the image file extension.</summary>
-            /// <exception cref="System.ArgumentException"> Thrown when file extension is invalid.</exception>
-            public void SetImageExtension(FileExtension imageExtension){
-                //check if invalid
-                if(imageExtension != FileExtension.png && imageExtension != FileExtension.jpeg){
-                    throw new ArgumentException("File extension passed is invalid.");
-                }
-
-                //update
-                this.imageExtension = imageExtension;
-            }
-
-            /// <summary> Return the image file extension.</summary>
-            public FileExtension? GetImageExtension(){
-                return this.imageExtension;
-            }
-
-
             /// <summary> Check if the instance, is corrupted.</summary>
             public static bool IsCorrupted(Setting instance){
                 //check if one is null
-                if(instance.savedPath == null || instance.timeoutMS == null || instance.imageExtension == null){
+                if(instance.savedPath == null || instance.timeoutMS == null){
                     return true;
                 }
 
@@ -1026,12 +1163,12 @@ namespace EchoCapture.Data{
 
                 //check for range of new dimension
                 if(newWidth <= 0){
-                    throw new ArgumentOutOfRangeException("Argument 4 passed is invalid. Zero and negative values isn't valid.", "newWidth");
+                    throw new ArgumentOutOfRangeException("newWidth", "Argument 4 passed is invalid. Zero and negative values isn't valid.");
                 }
 
                 //check for range of new dimension
                 if(newHeight <= 0){
-                    throw new ArgumentOutOfRangeException("Argument 5 passed is invalid. Zero and negative values isn't valid.", "newHeight");
+                    throw new ArgumentOutOfRangeException("newHeight", "Argument 5 passed is invalid. Zero and negative values isn't valid.");
                 }
 
                 //parse value to enum and update field
@@ -1116,7 +1253,7 @@ namespace EchoCapture.Data{
 
                 //update states
                 this.enabledRescaling = enabledRescaling;
-                this.rescalingResolution = null;
+                this.rescalingResolution = newResolution;
                 this.jpegImageQuality = jpegQuality;
 
                 //parse value to enum and update field
