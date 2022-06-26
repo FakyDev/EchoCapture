@@ -34,7 +34,7 @@ namespace EchoCapture.Command{
                 //dictionary holding args for help command
                 Dictionary<int, CommandArg> _dictionary = new Dictionary<int, CommandArg>();
                 //for first arg
-                _dictionary.Add(0, new CommandArg("state", 1, $"Either \"{TaskCommand.START}\" or \"{TaskCommand.STOP}\". *{TaskCommand.START} is used to start performing and {TaskCommand.STOP} is used to stop the action.", typeof(string)));
+                _dictionary.Add(0, new CommandArg("state", 1, $"Either \"{TaskCommand.START}\" or \"{TaskCommand.STOP}\". *{TaskCommand.START} is used to start performing and *{TaskCommand.STOP} is used to stop the action.", typeof(string)));
 
                 //return
                 return _dictionary;
