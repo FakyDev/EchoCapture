@@ -194,7 +194,7 @@ namespace EchoCapture.Data.File.Image{
                 }
 
                 //return rescaled bitmap
-                return new Bitmap(screenshot, ImageFile._ImageQualitySetting.RescalingResolution[0], ImageFile._ImageQualitySetting.RescalingResolution[0]);
+                return new Bitmap(screenshot, ImageFile._ImageQualitySetting.RescalingResolution[0], ImageFile._ImageQualitySetting.RescalingResolution[1]);
 
             } finally {
                 //dispose old bitmap
