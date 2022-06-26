@@ -125,6 +125,7 @@ namespace EchoCapture{
             //message
             Debug.Message(msg);
             Debug.SkipLine();
+            Debug.Warning("Type '.help' for a list available commands.");
 
             //initialise command manager and application data
             CommandManager.Initialise();
