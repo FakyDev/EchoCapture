@@ -194,7 +194,7 @@ namespace EchoCapture.Command{
 
                 //request the debug to stop
                 try{
-                    TaskCommand.client.DropRequest();
+                    TaskCommand.client?.DropRequest();
                 } catch (InvalidOperationException){}
 
                 //update values
