@@ -80,7 +80,17 @@ namespace EchoCapture.Data{
         /// <summary> (Get only) Return path to the capture screen folder..</summary>
         internal static string CaptureScreenFolder{
             get{
-                return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "captureScreen";
+                //hold the path
+                string path;
+                try{
+                    //retrive the path
+                    ApplicationData.GetFileData(out path);
+                } catch(ReadingDataFileException){
+                    //return default path
+                    return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "captureScreen";
+                }
+                //return path
+                return path;
             }
         }
 

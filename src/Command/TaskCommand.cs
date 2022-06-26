@@ -251,11 +251,14 @@ namespace EchoCapture.Command{
             //will hold the instance
             ImageFile file = null;
 
+            //gets path
+            string path = ApplicationData.CaptureScreenFolder;
+
             //create instance
             if(imageExtension == FileExtension.png){
-                file = new PngFile(date, ApplicationData.CaptureScreenFolder);
+                file = new PngFile(date, path);
             } else if(imageExtension == FileExtension.jpeg){
-                file = new JpgFile(date, ApplicationData.CaptureScreenFolder);
+                file = new JpgFile(date, path);
             }
 
             //will hold the stream
