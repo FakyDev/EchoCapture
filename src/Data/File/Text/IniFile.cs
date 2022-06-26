@@ -738,7 +738,7 @@ namespace EchoCapture.Data.File.Text{
                             IniLine newLineCreated;
                             //create new line with old inline comment
                             if(!removeInlineComment && !String.IsNullOrEmpty(line.InlineComment) && line.InlineComment.Length > 2){
-                                newLineCreated = IniLine.CreateKeyValueLine<T>(keyName, value, line.InlineComment.Remove(0, 1));
+                                newLineCreated = IniLine.CreateKeyValueLine<T>(keyName, value, line.InlineComment);
 
                             //create new line with no comment
                             } else {
@@ -870,7 +870,7 @@ namespace EchoCapture.Data.File.Text{
                             IniLine newLineCreated;
                             //create new line with old inline comment
                             if(!removeInlineComment && !String.IsNullOrEmpty(line.InlineComment) && line.InlineComment.Length > 2){
-                                newLineCreated = IniLine.CreateKeyValueLine<T>(keyName, value, line.InlineComment.Remove(0, 1));
+                                newLineCreated = IniLine.CreateKeyValueLine<T>(keyName, value, line.InlineComment);
 
                             //create new line with no comment
                             } else {
@@ -3288,5 +3288,3 @@ namespace EchoCapture.Data.File.Text{
         Invalid
     }
 }
-
-//to-do: fix String.EmptyOrNull with the other one
