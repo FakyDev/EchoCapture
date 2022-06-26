@@ -13,7 +13,7 @@ namespace EchoCapture.Command{
                 //dictionary holding args for help command
                 Dictionary<int, CommandArg> _dictionary = new Dictionary<int, CommandArg>();
                 //for first arg
-                _dictionary.Add(0, new CommandArg("commandName", 1, "The name of the command you need information.", typeof(string)));
+                _dictionary.Add(0, new CommandArg("commandName", 1, "The name of the command you need help with.", typeof(string)));
 
                 //return
                 return _dictionary;
