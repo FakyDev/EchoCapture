@@ -14,11 +14,11 @@ namespace EchoCapture{
                 #if DEBUG
                     return true;
                 #else
-                    return false;
+                    return false; 
                 #endif
             }
         }
-        
+
         /// <summary> Output the boolean, to console.</summary>
         public static void Dump(this bool value){
             //check if true or false
