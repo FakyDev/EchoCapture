@@ -34,6 +34,8 @@ namespace EchoCapture.Command{
             new ExitCommand();
             new SettingCommand();
             new TaskCommand();
+            new ImageSettingCommand();
+            new InformationCommand();
 
             //loop through list
             foreach(ICommand command in CommandManager.CommandList){
