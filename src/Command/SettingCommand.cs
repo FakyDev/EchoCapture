@@ -61,7 +61,7 @@ namespace EchoCapture.Command{
                 this.UpdateFolder(args[1]);
 
                 //inform user
-                Debug.Success($"Capture screen are now saving in the directory \"${args[1]}\".");
+                Debug.Success($"Capture screen are now saving in the directory \"{args[1]}\".");
                 return;
             }
 
