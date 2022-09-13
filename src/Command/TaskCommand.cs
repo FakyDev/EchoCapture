@@ -153,13 +153,11 @@ namespace EchoCapture.Command{
                     //throw new exception
                     throw new ReadingDataFileException("Failed to start the operation of capturing screen.");
                 }
-
-                //if debug start debug process
-                if(Debug.IsDebug){
-                    Program.StartCaptureDebug();
-                    //update reference
-                    TaskCommand.client = (SocketClient) Program._Socket;
-                }
+                
+                //debug part is implemented in the main method itself
+                Program.StartCaptureDebug();
+                //update reference
+                TaskCommand.client = (SocketClient) Program._Socket;
 
                 //update state
                 this.isRunning = true;
@@ -275,7 +273,7 @@ namespace EchoCapture.Command{
                             await file.OverwriteFileAsync(fs, bmp);
                         } catch(System.IO.IOException){
                             //async debug
-                            if(Debug.IsDebug && TaskCommand.client.Connected){
+                            if(TaskCommand.client.Connected){
                                 Task debugOpertion = Task.Run(() => {
                                     //create line
                                     string line = $"{debugDate} Failed to save capture screen: \"{date}.{file.Extension}\"";
@@ -294,7 +292,7 @@ namespace EchoCapture.Command{
                         }
 
                         //async debug
-                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                        if(TaskCommand.client.Connected){
                             Task debugOpertion = Task.Run(() => {
                                 //create line
                                 string line = $"{debugDate} Created file and saved the capture screen: \"{date}.{file.Extension}\"";
@@ -307,7 +305,7 @@ namespace EchoCapture.Command{
                         Task updateLog = ApplicationData.UpdateLog($"Created file and saved the capture screen: \"{date}.{file.Extension}\".");
                     } else {
                         //async debug
-                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                        if(TaskCommand.client.Connected){
                             Task debugOpertion = Task.Run(() => {
                                 //create line
                                 string line = $"{debugDate} Failed to create file storing capture screen: \"{date}.{file.Extension}\"";
@@ -328,7 +326,7 @@ namespace EchoCapture.Command{
                         await file.OverwriteFileAsync(bmp);
                     } catch(System.IO.IOException){
                         //async debug
-                        if(Debug.IsDebug && TaskCommand.client.Connected){
+                        if(TaskCommand.client.Connected){
                             Task debugOpertion = Task.Run(() => {
                                 //create line
                                 string line = $"{debugDate} Failed to save capture screen: \"{date}.{file.Extension}\"";
@@ -344,7 +342,7 @@ namespace EchoCapture.Command{
                     }
 
                     //async debug
-                    if(Debug.IsDebug && TaskCommand.client.Connected){
+                    if(TaskCommand.client.Connected){
                         Task debugOpertion = Task.Run(() => {
                             //create line
                             string line = $"{debugDate} Saved the capture screen: \"{date}.{file.Extension}\"";

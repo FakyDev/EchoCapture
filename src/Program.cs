@@ -294,9 +294,16 @@ namespace EchoCapture{
             process.StartInfo.Arguments = $"captureDebug {port}";
             //set hidden
             process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-            //to create new window
-            process.StartInfo.CreateNoWindow = false;
-            process.StartInfo.UseShellExecute = true;
+
+            if(Debug.IsDebug){
+                //to create new window
+                process.StartInfo.CreateNoWindow = false;
+                process.StartInfo.UseShellExecute = true;
+            } else {
+                //to create hidden window
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+            }
 
             //add event which will be call inside default when debug is killed
             process.Exited += Program.OnDebugExit;
