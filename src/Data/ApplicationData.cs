@@ -24,7 +24,7 @@ namespace EchoCapture.Data{
         /// <summary> (Get only) Return setting with default values.</summary>
         private static Setting DefaultConfig{
             get{
-                return new Setting(ApplicationData.DataFolder, 10000, FileExtension.png);
+                return new Setting(ApplicationData.CaptureScreenFolder, 10000, FileExtension.png);
             }
         }
 
@@ -85,7 +85,7 @@ namespace EchoCapture.Data{
                 try{
                     //retrive the path
                     ApplicationData.GetFileData(out path);
-                } catch(ReadingDataFileException){
+                } catch(Exception){
                     //return default path
                     return ApplicationData.DataFolder + System.IO.Path.DirectorySeparatorChar + "captureScreen";
                 }
