@@ -76,14 +76,20 @@ namespace EchoCapture{
                 Program.currentState = ApplicationState.Normal;
             }
             
-            //intialise application
-            Program.Initialise();
+            try{
+                //intialise application
+                Program.Initialise();
 
-            //perform operation
-            if(Program.DebugState){
-                Program.PerformDebug(Networkable.LocalIp, Int32.Parse(args[1]));
-            } else {
-                Program.PerformDefault();
+                //perform operation
+                if(Program.DebugState){
+                    Program.PerformDebug(Networkable.LocalIp, Int32.Parse(args[1]));
+                } else {
+                    Program.PerformDefault();
+                }
+            } catch (Exception e){
+                //display error
+                Console.WriteLine(e);
+                Console.ReadLine();
             }
         }
 
