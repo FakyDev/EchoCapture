@@ -6,7 +6,7 @@ interval time, with configurations of your choice, supported on Windows 10 and W
 # Requirements
 
 .NET Desktop Runtime 5.x.x, is required to run the application.
-Download: https://dotnet.microsoft.com/en-us/download/dotnet/5.0
+[Download Here](https://dotnet.microsoft.com/en-us/download/dotnet/5.0)
 
 # Basic Configuration
 
