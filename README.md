@@ -17,7 +17,6 @@ Updating the save folder to `C:\Games\Screenshots`.
 .setting folder C:\Games\Screenshots
 ```
 
-
 Set the screen capture interval, which is in milliseconds. `(1000ms = 1s)`
 
 Updating the capture interval to 40s.
