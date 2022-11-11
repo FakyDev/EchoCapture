@@ -12,7 +12,11 @@ Download: https://dotnet.microsoft.com/en-us/download/dotnet/5.0
 
 Set the save folder location of the screen capture.
 Default save location is found at %localappdata%\EchoCapture.
-```.setting folder C:\Games\Screenshots```
+```
+.setting folder C:\Games\Screenshots
+```
 
 Set the screen capture interval, which is in milliseconds. (1000ms = 1s)
-```.setting interval 40000  ```
+```
+.setting interval 40000
+```
