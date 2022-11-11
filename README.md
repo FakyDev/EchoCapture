@@ -11,10 +11,9 @@ interval time, with configurations of your choice, supported on Windows 10 and W
 # Basic Configuration
 
 ### Update save folder location
-The default save location of capture screen are found at `%localappdata%\EchoCapture`.
+The default save location of capture screen is found at `%localappdata%\EchoCapture`.
 To change the folder location use the command below.
 
-Updating the save folder to `C:\Games\Screenshots`.
 ```
 .setting folder C:\Games\Screenshots
 ```
