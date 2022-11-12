@@ -76,10 +76,15 @@ to find the difference and select what fits you.
 
 ### Image-rescaling
 
-Each capture screen will be rescale to the resolution specified, if enabled.
-
-Below show on how to enable the image-rescaling.
+For image-rescaling, you need first to enable it as shown below. 
 
 ```
 .imageSetting rescaling true
+```
+
+Then you specify the scaling resolution you desire, as below.
+The resolution consists of ``Width x Height``.
+
+```
+.imageSetting rescalingResolution 1920 1080
 ```
