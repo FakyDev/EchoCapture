@@ -91,3 +91,6 @@ The rescaling resolution consists of ``Width x Height``.
 
 Now each capture screen will be rescale to the rescaling resolution specified.
 This can also be disabled, which is by default.
+
+
+## Image Presets
