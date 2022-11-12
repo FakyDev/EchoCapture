@@ -65,4 +65,4 @@ These settings are applied to each capture capture.
 
 ### Set image type
 
-The capture screen can either be in ``png`` or ``jpeg``.
+The capture screen can either be in ``png`` or ``jpeg``, the choice is up to you.
