@@ -154,7 +154,7 @@ You can change to whatever you want as shown below.
 
 ### Capture screen are empty/black?
 
-Try changing the [pixel format](#Requirements).
+Try changing the [pixel format](####Changing-pixel-format).
 
 
 ### No capture screen are saved?
