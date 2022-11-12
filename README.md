@@ -120,7 +120,7 @@ There are only two changes that can be made:
 
 #### Changing pixel format
 
-You can change the pixel format for you capture screen, as shown below.
+You can change the pixel format for your capture screen, as shown below.
 
 ```
 .imageSetting format Format48bppRgb
@@ -138,3 +138,14 @@ There are a bunch of pixel format available:
 * Format64bppPArgb
 
 [Click here](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.imaging.pixelformat?view=dotnet-plat-ext-5.0) for more information about these pixel format.
+
+
+#### Changing image quality (only jpeg)
+
+This will only affect jpeg image-type capture screen.
+The image quality ranges from ``0-100`` and ``100`` being with most details.
+You can change to whatever you want as shown below.
+
+```
+.imageSetting jpgQuality 95
+```
