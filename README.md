@@ -65,7 +65,9 @@ These settings are applied to each capture capture.
 
 ### Set image type
 
-The capture screen can either be in ``png`` or ``jpeg``. [Click Here](https://undsgn.com/jpg-vs-png/#:~:text=The%20Difference%20between%20PNG%20and%20JPG&text=PNG%20stands%20for%20Portable%20Network,%2Dcalled%20%E2%80%9Clossy%E2%80%9D%20compression.)
+The capture screen can either be in ``png`` or ``jpeg``. Below is an example on how to set the image type to ``png``.
+
+[Click Here](https://undsgn.com/jpg-vs-png/#:~:text=The%20Difference%20between%20PNG%20and%20JPG&text=PNG%20stands%20for%20Portable%20Network,%2Dcalled%20%E2%80%9Clossy%E2%80%9D%20compression.)
 to find the difference and select what fits you.
 
 ```
