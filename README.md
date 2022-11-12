@@ -18,7 +18,7 @@ The default save location of capture screen is found at ``%localappdata%\EchoCap
 Below is an example on how to change the save folder to ``C:\Games\Screenshots``.
 
 ```
-.setting folder C:\Games\Screenshots
+.setting folder "C:\Games\Screenshots"
 ```
 
 ### Set capture screen interval
