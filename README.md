@@ -3,6 +3,8 @@
 EchoCapture is a command-line application allowing you to capture your screen at an
 interval time, with configurations of your choice, supported on Windows 10 and Windows 11.
 
+Windows 7 has not been tested, but it might probably work.
+
 # Requirements
 
 .NET Desktop Runtime 5.x.x, is required to run the application.
