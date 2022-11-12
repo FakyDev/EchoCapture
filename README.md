@@ -50,7 +50,7 @@ Below start capturing your screen at the interval you set.
 
 ### Stop screen capture
 
-Below end the capture screen task. ``Note: closing the application will
+Below end the capture screen task. ``Note: Closing the application will
 also end the task.``
 
 ```
