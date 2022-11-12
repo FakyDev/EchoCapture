@@ -50,8 +50,8 @@ Below start capturing your screen at the interval you set.
 
 ### Stop screen capture
 
-Below end the capture screen task. ``Note: Closing the application will
-also end the task.``
+Below end the capture screen task.
+``Note: Closing the application will also end the task.``
 
 ```
 .task stop
@@ -65,7 +65,8 @@ These settings are applied to each capture capture.
 
 ### Set image type
 
-The capture screen can either be in ``png`` or ``jpeg``. Below is an example on how to set the image type to ``png``.
+The capture screen can either be in ``png`` or ``jpeg``.
+Below is an example on how to set the image type to ``png``.
 
 [Click Here](https://undsgn.com/jpg-vs-png/#:~:text=The%20Difference%20between%20PNG%20and%20JPG&text=PNG%20stands%20for%20Portable%20Network,%2Dcalled%20%E2%80%9Clossy%E2%80%9D%20compression.)
 to find the difference and select what fits you.
@@ -94,3 +95,25 @@ This can also be disabled, which is by default.
 
 
 ## Image Presets
+
+There are three image presets available:
+* high
+* standard
+* low
+
+### Selecting image preset
+
+The default preset is ``standard``.
+You can select any preset as shown below.
+
+```
+.imageSetting preset high
+```
+
+### Customising image preset
+
+Whenever you are customising an image preset, any changes made will be applied to the current chosen preset.
+
+There are only two changes that can be made:
+* Pixel format
+* Image quality, will affect only ```jpeg``` image-type.
