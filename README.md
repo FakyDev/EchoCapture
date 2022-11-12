@@ -73,3 +73,13 @@ to find the difference and select what fits you.
 ```
 .imageSetting imageType png
 ```
+
+### Image-rescaling
+
+Each capture screen will be rescale to the resolution specified, if enabled.
+
+Below show on how to enable the image-rescaling.
+
+```
+.imageSetting rescaling true
+```
