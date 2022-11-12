@@ -56,3 +56,11 @@ also end the task.``
 ```
 .task stop
 ```
+
+# Image Configuration
+
+### General image setting
+
+These settings are applied to each capture capture.
+
+#### IDK
