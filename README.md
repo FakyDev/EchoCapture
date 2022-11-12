@@ -32,8 +32,27 @@ Below is an example on how to change the capture screen interval.
 
 ### Display configuration
 
-Below show the configuration that you are using and presets configuration.
+Below show the configuration that you are using and the presets configuration.
 
 ```
 .information
+```
+
+# Capturing Screen
+
+### Begin screen capture
+
+Below start capturing your screen at the interval you set.
+
+```
+.task start
+```
+
+### Stop screen capture
+
+Below end the capture screen task. ``Note: closing the application will
+also end the task.```
+
+```
+.task stop
 ```
