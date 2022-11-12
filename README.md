@@ -29,3 +29,11 @@ Below is an example on how to change the capture screen interval.
 ```
 .setting interval 40000
 ```
+
+### Display configuration
+
+Below show the configuration that you are using and presets configuration.
+
+```
+.information
+```
