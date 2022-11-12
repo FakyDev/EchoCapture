@@ -82,9 +82,12 @@ For image-rescaling, you need first to enable it as shown below.
 .imageSetting rescaling true
 ```
 
-Then you specify the scaling resolution you desire, as below.
-The resolution consists of ``Width x Height``.
+Then you specify the rescaling resolution you desire, as below.
+The rescaling resolution consists of ``Width x Height``.
 
 ```
 .imageSetting rescalingResolution 1920 1080
 ```
+
+Now each capture screen will be rescale to the rescaling resolution specified.
+This can also be disabled, which is by default.
