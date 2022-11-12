@@ -24,7 +24,7 @@ Below is an example on how to change the save folder to ``C:\Games\Screenshots``
 The default interval is 10s ``(equivalent to 10000ms)``.
 Below is an example on how to change the capture screen interval.
 
-``Note: 1000ms = 1s`
+``Note: 1000ms = 1s``
 
 ```
 .setting interval 40000
