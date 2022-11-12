@@ -154,9 +154,9 @@ You can change to whatever you want as shown below.
 
 ### Capture screen are empty/black?
 
-Try changing the [pixel format](####Changing-pixel-format).
+Try changing the [pixel format]("#Changing-pixel-format").
 
 
 ### No capture screen are saved?
 
-Try changing the [save folder location](###Set save folder location) to somewhere your user has permission.
+Try changing the [save folder location](#Set save folder location) to somewhere your user has permission.
