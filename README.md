@@ -59,9 +59,10 @@ also end the task.``
 
 # Image Configuration
 
-### General image setting
+## General image setting
 
 These settings are applied to each capture capture.
 
-## IDKsadasd
-sadsadasd
+### Set image type
+
+The capture screen can either be in ``png`` or ``jpeg``.
