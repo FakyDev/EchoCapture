@@ -10,7 +10,8 @@ interval time, with configurations of your choice, supported on Windows 10 and W
 
 # Basic Configuration
 
-### Update save folder location
+### Set save folder location
+
 The default save location of capture screen is found at `%localappdata%\EchoCapture`.
 Below is an example on how to change the save folder to `C:\Games\Screenshots`.
 
@@ -18,11 +19,14 @@ Below is an example on how to change the save folder to `C:\Games\Screenshots`.
 .setting folder C:\Games\Screenshots
 ```
 
-### Update capture screen interval
+### Set capture screen interval
 
-Set the screen capture interval, which is in milliseconds. `(1000ms = 1s)`
+The default interval is 10s `(equivalent to 10000ms)`.
+``` 
+1000ms = 1s
+```
+Below is an example on how to change the capture screen interval.
 
-Updating the capture interval to 40s.
 ```
 .setting interval 40000
 ```
