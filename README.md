@@ -74,7 +74,7 @@ to find the difference and select what fits you.
 .imageSetting imageType png
 ```
 
-### Image-rescaling
+### Set image-rescaling
 
 For image-rescaling, you need first to enable it as shown below. 
 
