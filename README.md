@@ -132,3 +132,9 @@ There are a bunch of pixel format available:
 * Format64bppPArgb
 
 [Click here](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.imaging.pixelformat?view=dotnet-plat-ext-5.0) for more information about these pixel format.
+
+Below shows how to select ``Format48bppRgb`` as pixel format.
+
+```
+.imageSetting format Format48bppRgb
+```
