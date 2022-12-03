@@ -135,9 +135,6 @@ There are a bunch of pixel format available:
 * Format32bppArgb
 * Format32bppPArgb
 * Format32bppRgb
-* Format48bppRgb
-* Format64bppArgb
-* Format64bppPArgb
 
 [Click here](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.imaging.pixelformat?view=dotnet-plat-ext-5.0) for more information about these pixel format.
 
