@@ -1040,7 +1040,7 @@ namespace EchoCapture.Data{
             
             /// <summary> Default pixel formats set in an image quality preset config.</summary>
             /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
-            public readonly static string[] DefaultPixelFormats = new string[3]{"Format48bppRgb", "Format32bppRgb", "Format24bppRgb"};
+            public readonly static string[] DefaultPixelFormats = new string[3]{"Format32bppRgb", "Format32bppRgb", "Format24bppRgb"};
 
             /// <summary> Default image quality applicable only when jpeg format is set.</summary>
             /// <remarks> [0] is for high, [1] is for standard, [2] is for low.</remarks>
@@ -1070,8 +1070,8 @@ namespace EchoCapture.Data{
                 get{
                     //update
                     if(validPixelFormats == null){
-                        ImageQualityPresetSetting.validPixelFormats = new string[9]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
-                        "Format32bppPArgb", "Format32bppRgb", "Format48bppRgb", "Format64bppArgb", "Format64bppPArgb"};
+                        ImageQualityPresetSetting.validPixelFormats = new string[6]{"Format16bppRgb555", "Format16bppRgb565", "Format24bppRgb", "Format32bppArgb",
+                        "Format32bppPArgb", "Format32bppRgb"};
                     }
 
                     return ImageQualityPresetSetting.validPixelFormats;
@@ -1162,7 +1162,7 @@ namespace EchoCapture.Data{
                 }
 
                 //check for list of image types
-                if(!ImageQualityPresetSetting.validImageTypes.Contains(imageType)){
+                if(!ImageQualityPresetSetting.ValidImageTypes.Contains(imageType)){
                     throw new ArgumentException("Argument 3 passed is not from the list of valid image types.", "imageType");
                 }
 
@@ -1215,7 +1215,7 @@ namespace EchoCapture.Data{
                 }
 
                 //check for list of image types
-                if(!ImageQualityPresetSetting.validImageTypes.Contains(imageType)){
+                if(!ImageQualityPresetSetting.ValidImageTypes.Contains(imageType)){
                     throw new ArgumentException("Argument 3 passed is not from the list of valid image types.", "imageType");
                 }
 
